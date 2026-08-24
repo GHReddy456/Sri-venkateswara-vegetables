@@ -391,15 +391,17 @@ export default function Records() {
                 </thead>
                 <tbody className="divide-y divide-[#bfc9bf]/20">
                   {summaries.map((s) => (
-                    <tr key={s.purchase_date} className="hover:bg-[#eff4ff]/50 transition-colors group print:border-b print:border-gray-200">
+                    <tr
+                      key={s.purchase_date}
+                      onClick={() => setSelectedDate(s.purchase_date)}
+                      className="hover:bg-[#eff4ff] transition-colors group print:border-b print:border-gray-200 cursor-pointer"
+                      title="Click row to view detailed purchase records for this date"
+                    >
                       <td className="px-6 py-4 text-sm font-semibold print:py-2 print:text-base print:border-b print:border-gray-200">
-                        <button
-                          onClick={() => setSelectedDate(s.purchase_date)}
-                          className="flex items-center gap-2 text-[#004323] hover:underline print:text-black print:no-underline"
-                        >
+                        <span className="flex items-center gap-2 text-[#004323] group-hover:underline print:text-black print:no-underline">
                           <span className="material-symbols-outlined text-[18px] text-[#404941] print:hidden">calendar_today</span>
                           {formatDate(s.purchase_date)}
-                        </button>
+                        </span>
                       </td>
                       <td className="px-6 py-4 text-right font-['Outfit'] font-semibold text-[#0b1c30] text-base print:py-2 print:text-base print:border-b print:border-gray-200">
                         {formatCurrency(s.daily_total)}
