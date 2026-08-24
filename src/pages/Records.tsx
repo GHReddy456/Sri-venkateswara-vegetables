@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Vendor, PurchaseRecord, DailySummary } from '../types';
 import { formatCurrency, formatDate } from '../lib/format';
+import { calculateLineTotal } from '../lib/calculations';
 import { Loader2 } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 
@@ -16,7 +17,11 @@ export default function Records() {
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
   const [detailedRecords, setDetailedRecords] = useState<PurchaseRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
+  // Edit record state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ item: '', bags_count: 0, kgs: 0, unit_price: 0 });
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,8 +41,7 @@ export default function Records() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Main fetch query depending on filter combination
-  useEffect(() => {
+  const fetchRecords = () => {
     if (!selectedVendorId && !selectedDate) {
       setSummaries([]);
       setDetailedRecords([]);
@@ -47,7 +51,6 @@ export default function Records() {
     setLoading(true);
 
     if (selectedVendorId && selectedDate) {
-      // Combination: Both Vendor + Date selected -> fetch detailed records for vendor on date
       supabase
         .from('purchase_records')
         .select('*')
@@ -62,7 +65,6 @@ export default function Records() {
           setLoading(false);
         });
     } else if (selectedVendorId && !selectedDate) {
-      // Vendor only -> 30 days summary grouped by date
       const thirtyDaysAgo = format(subDays(new Date(), 29), 'yyyy-MM-dd');
       const today = format(new Date(), 'yyyy-MM-dd');
       supabase
@@ -87,7 +89,6 @@ export default function Records() {
           setLoading(false);
         });
     } else if (!selectedVendorId && selectedDate) {
-      // Date only -> fetch records for ALL vendors on this date
       supabase
         .from('purchase_records')
         .select('*')
@@ -101,7 +102,45 @@ export default function Records() {
           setLoading(false);
         });
     }
+  };
+
+  useEffect(() => {
+    fetchRecords();
   }, [selectedVendorId, selectedDate]);
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    const lineTotal = calculateLineTotal(editForm.kgs, editForm.unit_price);
+    const { error } = await supabase
+      .from('purchase_records')
+      .update({
+        item: editForm.item,
+        bags_count: editForm.bags_count,
+        kgs: editForm.kgs,
+        unit_price: editForm.unit_price,
+        total_price: lineTotal,
+      })
+      .eq('id', editingId);
+
+    if (error) {
+      alert('Failed to update record: ' + error.message);
+    } else {
+      setEditingId(null);
+      fetchRecords();
+    }
+  };
+
+  const handleDeleteRecord = async (id: string, itemName: string, kgs: number, price: number, total: number) => {
+    if (!confirm(`Are you sure you want to delete this record?\n\nItem: ${itemName}\nKgs: ${kgs} kg\nRate: ₹${price}/kg\nTotal: ${formatCurrency(total)}`)) {
+      return;
+    }
+    const { error } = await supabase.from('purchase_records').delete().eq('id', id);
+    if (error) {
+      alert('Failed to delete record: ' + error.message);
+    } else {
+      fetchRecords();
+    }
+  };
 
   const selectedVendor = vendors.find(v => v.id === selectedVendorId);
   const vendorMap = new Map(vendors.map(v => [v.id, v.name]));
@@ -139,7 +178,7 @@ export default function Records() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 print:hidden">
         <div>
           <h1 className="font-['Outfit'] text-4xl font-bold text-[#0b1c30] tracking-tight">Purchase Records</h1>
-          <p className="mt-1 text-sm text-[#404941]">Filter by vendor, date, or combination to view and print reports.</p>
+          <p className="mt-1 text-sm text-[#404941]">Filter by vendor, date, or combination to view, edit, delete, and print reports.</p>
         </div>
         {hasDataToPrint && (
           <button
@@ -320,8 +359,6 @@ export default function Records() {
         )}
       </div>
 
-
-
       {/* ----------------- MODE A: Vendor Selected, Date Empty -> 30-Day Summary ----------------- */}
       {selectedVendorId && !selectedDate && (
         <>
@@ -490,21 +527,63 @@ export default function Records() {
                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] print:border-b print:border-gray-300 print:text-sm">Kgs</th>
                     <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] print:border-b print:border-gray-300 print:text-sm">Rate / kg</th>
                     <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#404941] print:border-b print:border-gray-300 print:text-sm">Total</th>
+                    <th className="w-24 print:hidden"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#bfc9bf]/20">
                   {detailedRecords.map((r) => (
                     <tr key={r.id} className="hover:bg-[#eff4ff]/50 transition-colors print:border-b print:border-gray-200">
-                      {!selectedVendorId && (
-                        <td className="px-6 py-4 text-sm font-bold text-[#004323] print:text-black print:py-2">
-                          {vendorMap.get(r.vendor_id) || 'Vendor'}
-                        </td>
+                      {editingId === r.id ? (
+                        <>
+                          {!selectedVendorId && (
+                            <td className="px-6 py-3 font-bold text-[#004323]">{vendorMap.get(r.vendor_id)}</td>
+                          )}
+                          <td className="px-6 py-3"><input type="text" value={editForm.item} onChange={e => setEditForm({...editForm, item: e.target.value})} className="w-full rounded-lg border border-[#bfc9bf] px-3 py-1.5 text-sm" /></td>
+                          <td className="px-4 py-3"><input type="number" value={editForm.bags_count} onChange={e => setEditForm({...editForm, bags_count: Number(e.target.value)})} className="w-full rounded-lg border border-[#bfc9bf] px-3 py-1.5 text-sm" /></td>
+                          <td className="px-4 py-3"><input type="number" value={editForm.kgs} onChange={e => setEditForm({...editForm, kgs: Number(e.target.value)})} className="w-full rounded-lg border border-[#bfc9bf] px-3 py-1.5 text-sm" /></td>
+                          <td className="px-4 py-3"><input type="number" value={editForm.unit_price} onChange={e => setEditForm({...editForm, unit_price: Number(e.target.value)})} className="w-full rounded-lg border border-[#bfc9bf] px-3 py-1.5 text-sm" /></td>
+                          <td className="px-4 py-3 text-right font-['Outfit'] font-semibold text-[#0b1c30]">
+                            {formatCurrency(calculateLineTotal(editForm.kgs, editForm.unit_price))}
+                          </td>
+                          <td className="pr-4 py-3 text-right print:hidden">
+                            <div className="flex items-center justify-end gap-1">
+                              <button onClick={handleSaveEdit} className="flex h-8 w-8 items-center justify-center rounded-full bg-[#eff4ff] text-[#004323] hover:bg-[#a9f3be]" title="Save edit"><span className="material-symbols-outlined text-[18px]">check</span></button>
+                              <button onClick={() => setEditingId(null)} className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Cancel"><span className="material-symbols-outlined text-[18px]">close</span></button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          {!selectedVendorId && (
+                            <td className="px-6 py-4 text-sm font-bold text-[#004323] print:text-black print:py-2">
+                              {vendorMap.get(r.vendor_id) || 'Vendor'}
+                            </td>
+                          )}
+                          <td className="px-6 py-4 text-sm font-semibold text-[#0b1c30] print:text-black print:py-2">{r.item}</td>
+                          <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{r.bags_count}</td>
+                          <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{r.kgs}</td>
+                          <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{formatCurrency(r.unit_price)}</td>
+                          <td className="px-4 py-4 text-right font-['Outfit'] text-base font-semibold text-[#0b1c30] print:text-black print:py-2">{formatCurrency(r.total_price)}</td>
+                          <td className="pr-4 py-4 text-right print:hidden">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => { setEditingId(r.id); setEditForm({ item: r.item, bags_count: r.bags_count, kgs: r.kgs, unit_price: r.unit_price }); }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-[#404941] hover:bg-[#eff4ff] hover:text-[#004323]"
+                                title="Edit record"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRecord(r.id, r.item, r.kgs, r.unit_price, r.total_price)}
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-[#404941] hover:bg-[#ffdad6] hover:text-[#ba1a1a]"
+                                title="Delete record"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                              </button>
+                            </div>
+                          </td>
+                        </>
                       )}
-                      <td className="px-6 py-4 text-sm font-semibold text-[#0b1c30] print:text-black print:py-2">{r.item}</td>
-                      <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{r.bags_count}</td>
-                      <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{r.kgs}</td>
-                      <td className="px-4 py-4 text-sm text-[#404941] print:text-black print:py-2">{formatCurrency(r.unit_price)}</td>
-                      <td className="px-4 py-4 text-right font-['Outfit'] text-base font-semibold text-[#0b1c30] print:text-black print:py-2">{formatCurrency(r.total_price)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -519,6 +598,7 @@ export default function Records() {
                     <td className="px-4 py-4 text-right font-['Outfit'] text-2xl font-bold text-[#004323] print:text-black print:py-3">
                       {formatCurrency(totalDetailedAmount)}
                     </td>
+                    <td className="print:hidden"></td>
                   </tr>
                 </tfoot>
               </table>
