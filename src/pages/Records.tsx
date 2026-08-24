@@ -67,25 +67,26 @@ export default function Records() {
         )}
       </div>
 
-      {/* Vendor Selector */}
+      {/* Vendor Search Bar */}
       <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow print:hidden">
         <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
-          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select Vendor
+          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select / Search Vendor
         </label>
-        <div className="relative max-w-md">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#404941] text-[20px]">search</span>
+        <div className="relative w-full max-w-xl">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404941] text-[22px]">search</span>
           <select
             value={selectedVendorId}
             onChange={(e) => setSelectedVendorId(e.target.value)}
-            className="block w-full rounded-xl border border-[#bfc9bf] pl-10 pr-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+            className="w-full appearance-none rounded-xl border border-[#bfc9bf] bg-[#f8f9ff] py-3.5 pl-12 pr-10 text-base font-medium text-[#0b1c30] shadow-sm hover:border-[#004323] focus:border-[#004323] focus:bg-white transition-all cursor-pointer"
           >
-            <option value="">-- Choose a vendor --</option>
+            <option value="">Search or select a vendor from list...</option>
             {vendors.map((v) => (
-              <option key={v.id} value={v.id}>
+              <option key={v.id} value={v.id} className="py-2 text-base">
                 {v.name}{!v.active ? ' (Inactive)' : ''}
               </option>
             ))}
           </select>
+          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#404941] pointer-events-none text-[22px]">expand_more</span>
         </div>
       </div>
 
