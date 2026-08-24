@@ -1,98 +1,156 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
-  --color-primary-light: #dcfce7;
+  /* Color palette */
+  --color-primary: #004323;
+  --color-primary-container: #0d5c34;
+  --color-primary-fixed: #a9f3be;
+  --color-primary-fixed-dim: #8dd6a3;
+  --color-inverse-primary: #8dd6a3;
+  --color-on-primary: #ffffff;
+  --color-on-primary-fixed: #00210e;
+  --color-on-primary-fixed-variant: #00522c;
+  --color-on-primary-container: #8ad2a0;
+  --color-surface-tint: #226b41;
+
+  --color-secondary: #59605d;
+  --color-secondary-container: #dae1dd;
+  --color-secondary-fixed: #dde4e0;
+  --color-secondary-fixed-dim: #c1c8c4;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #161d1b;
+  --color-on-secondary-fixed-variant: #414846;
+  --color-on-secondary-container: #5d6461;
+
+  --color-tertiary: #343a40;
+  --color-tertiary-container: #4a5157;
+  --color-tertiary-fixed: #dde3eb;
+  --color-tertiary-fixed-dim: #c1c7cf;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed: #161c22;
+  --color-on-tertiary-fixed-variant: #41474e;
+  --color-on-tertiary-container: #bdc3cb;
+
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-variant: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #404941;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+
+  --color-outline: #707a70;
+  --color-outline-variant: #bfc9bf;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  /* Border radius */
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 40px;
+
+  /* Fonts */
+  --font-family-headline: "Outfit", system-ui, sans-serif;
+  --font-family-body: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background-color: #f0fdf4;
-  color: #1f2937;
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #64748b; }
+* { box-sizing: border-box; }
 
-/* Input focus styles */
+body {
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  background-color: #f8f9ff;
+  color: #0b1c30;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, .font-headline {
+  font-family: "Outfit", system-ui, sans-serif;
+}
+
+/* Glass panel */
+.glass-panel {
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Metric card shadow */
+.metric-shadow {
+  box-shadow: 0 4px 20px rgba(13, 92, 52, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.metric-shadow:hover {
+  box-shadow: 0 10px 25px rgba(13, 92, 52, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Input focus */
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: #16a34a !important;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-.card-hover:hover {
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-  transform: translateY(-1px);
-}
-
-/* Stat card gradient */
-.stat-gradient {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border-color: #004323 !important;
+  box-shadow: 0 0 0 3px rgba(0, 67, 35, 0.12);
 }
 
 /* Table row hover */
-.table-row-hover:hover {
-  background-color: #f0fdf4;
-}
+.table-row-hover:hover { background-color: #eff4ff; }
 
-/* Badge */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 500;
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #eff4ff; }
+::-webkit-scrollbar-thumb { background: #bfc9bf; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #707a70; }
 
-/* Smooth transitions */
-a, button { transition: all 0.15s ease; }
-
-/* Print styles */
+/* Print */
 @media print {
-  body {
-    background: #ffffff !important;
-    font-family: 'Inter', sans-serif;
-  }
-
+  body { background: #fff !important; font-family: "Plus Jakarta Sans", sans-serif; }
   .print\:hidden { display: none !important; }
   .hidden.print\:block { display: block !important; }
-  .hidden.print\:flex { display: flex !important; }
-
-  @page {
-    size: A4;
-    margin: 1.5cm 2cm;
-  }
-
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-
-  th, td {
-    border: 1px solid #d1d5db;
-    padding: 8px 12px;
-  }
-
+  @page { size: A4; margin: 1.5cm 2cm; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #d1d5db; padding: 8px 12px; }
   thead { background-color: #f3f4f6 !important; }
-
-  tfoot td {
-    border-top: 2px solid #374151 !important;
-    font-weight: 700;
-  }
+  tfoot td { border-top: 2px solid #374151 !important; font-weight: 700; }
 }

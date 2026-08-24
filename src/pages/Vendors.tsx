@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Vendor } from '../types';
-import {
-  Plus,
-  Edit2,
-  Archive,
-  Loader2,
-  RefreshCw,
-  Building2,
-  CheckCircle2,
-  XCircle,
-  Search,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function Vendors() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -24,10 +14,7 @@ export default function Vendors() {
 
   const fetchVendors = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('vendors')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.from('vendors').select('*').order('name');
     if (!error && data) setVendors(data);
     setLoading(false);
   };
@@ -61,36 +48,34 @@ export default function Vendors() {
     fetchVendors();
   };
 
-  const filtered = vendors.filter(v =>
-    v.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = vendors.filter(v => v.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const activeCount = vendors.filter(v => v.active).length;
   const inactiveCount = vendors.filter(v => !v.active).length;
 
   return (
-    <div className="space-y-6 px-1">
+    <div className="flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Vendors</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="font-['Outfit'] text-4xl font-bold text-[#0b1c30] tracking-tight">Vendors</h1>
+          <p className="mt-1 text-sm text-[#404941]">
             {activeCount} active · {inactiveCount} inactive
           </p>
         </div>
         <button
           onClick={() => { setIsAdding(true); setEditingId(null); }}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-200 hover:bg-primary-hover"
+          className="bg-[#004323] text-white font-['Outfit'] text-sm font-semibold px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#0d5c34] transition-all shadow-sm active:scale-95"
         >
-          <Plus className="h-4 w-4" />
+          <span className="material-symbols-outlined text-[20px]">add</span>
           Add Vendor
         </button>
       </div>
 
-      {/* Add form */}
+      {/* Add vendor form */}
       {isAdding && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 shadow-sm">
-          <h3 className="mb-3 text-sm font-semibold text-green-800 flex items-center gap-1.5">
-            <Plus className="h-4 w-4" /> New Vendor
+        <div className="bg-[#eff4ff] border border-[#a9f3be] rounded-2xl p-6 metric-shadow">
+          <h3 className="font-['Outfit'] text-base font-semibold text-[#004323] mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px]">add_business</span> New Vendor
           </h3>
           <form onSubmit={handleAddVendor} className="flex gap-3">
             <input
@@ -98,80 +83,76 @@ export default function Vendors() {
               value={newVendorName}
               onChange={(e) => setNewVendorName(e.target.value)}
               placeholder="Enter vendor name..."
-              className="flex-1 rounded-xl border border-green-200 bg-white px-4 py-2.5 text-sm shadow-sm placeholder:text-gray-400"
+              className="flex-1 rounded-xl border border-[#bfc9bf] bg-white px-4 py-2.5 text-sm"
               required
               autoFocus
             />
-            <button type="submit" className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-hover">
-              Save
-            </button>
-            <button type="button" onClick={() => setIsAdding(false)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">
-              Cancel
-            </button>
+            <button type="submit" className="bg-[#004323] text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-[#0d5c34]">Save</button>
+            <button type="button" onClick={() => setIsAdding(false)} className="border border-[#bfc9bf] bg-white px-5 py-2.5 rounded-full text-sm font-semibold text-[#404941] hover:bg-[#eff4ff]">Cancel</button>
           </form>
         </div>
       )}
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404941] text-[20px]">search</span>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search vendors..."
-          className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-4 text-sm shadow-sm"
+          className="w-full rounded-2xl border border-[#bfc9bf] bg-white py-3 pl-12 pr-4 text-sm metric-shadow"
         />
       </div>
 
       {/* Vendor list */}
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div className="bg-white border border-[#bfc9bf] rounded-2xl metric-shadow overflow-hidden">
         {loading ? (
           <div className="flex justify-center p-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#004323]" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 p-16 text-center">
-            <Building2 className="h-12 w-12 text-gray-200" />
-            <p className="text-gray-500">
+          <div className="flex flex-col items-center gap-3 p-16 text-center">
+            <span className="material-symbols-outlined text-[48px] text-[#bfc9bf]">storefront</span>
+            <p className="text-[#404941] text-sm">
               {searchQuery ? 'No vendors match your search.' : 'No vendors yet. Click "Add Vendor" to create one.'}
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-50">
+          <ul className="divide-y divide-[#bfc9bf]/20">
             {filtered.map((vendor) => (
-              <li key={vendor.id} className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-gray-50">
+              <li key={vendor.id} className="flex items-center justify-between px-6 py-4 hover:bg-[#eff4ff]/50 transition-colors">
                 {editingId === vendor.id ? (
                   <form onSubmit={(e) => handleUpdateVendor(e, vendor.id)} className="flex flex-1 items-center gap-3">
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="flex-1 max-w-sm rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                      className="flex-1 max-w-sm rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm"
                       required
                       autoFocus
                     />
-                    <button type="submit" className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white">Save</button>
-                    <button type="button" onClick={() => setEditingId(null)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600">Cancel</button>
+                    <button type="submit" className="bg-[#004323] text-white px-4 py-2 rounded-full text-xs font-semibold">Save</button>
+                    <button type="button" onClick={() => setEditingId(null)} className="border border-[#bfc9bf] px-4 py-2 rounded-full text-xs font-semibold text-[#404941]">Cancel</button>
                   </form>
                 ) : (
                   <>
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${vendor.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm font-['Outfit'] ${vendor.active ? 'bg-[#004323] text-white' : 'bg-gray-200 text-gray-400'}`}>
                         {vendor.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className={`font-medium ${vendor.active ? 'text-gray-900' : 'text-gray-400'}`}>
+                        <p className={`font-semibold ${vendor.active ? 'text-[#0b1c30]' : 'text-gray-400'}`}>
                           {vendor.name}
                         </p>
-                        <div className="mt-0.5 flex items-center gap-1.5">
+                        <div className="mt-1">
                           {vendor.active ? (
-                            <span className="badge bg-green-100 text-green-700">
-                              <CheckCircle2 className="mr-1 h-3 w-3" /> Active
+                            <span className="bg-[#eff4ff] text-[#004323] text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]">check_circle</span> Active
                             </span>
                           ) : (
-                            <span className="badge bg-gray-100 text-gray-500">
-                              <XCircle className="mr-1 h-3 w-3" /> Inactive
+                            <span className="bg-gray-100 text-gray-500 text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]">cancel</span> Inactive
                             </span>
                           )}
                         </div>
@@ -180,17 +161,17 @@ export default function Vendors() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => { setEditingId(vendor.id); setEditName(vendor.name); }}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-[#404941] hover:bg-[#eff4ff] hover:text-[#004323]"
                         title="Edit name"
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <span className="material-symbols-outlined text-[18px]">edit</span>
                       </button>
                       <button
                         onClick={() => handleToggleActive(vendor.id, vendor.active)}
-                        className={`flex h-8 w-8 items-center justify-center rounded-lg ${vendor.active ? 'text-red-400 hover:bg-red-50 hover:text-red-600' : 'text-green-500 hover:bg-green-50 hover:text-green-700'}`}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full ${vendor.active ? 'text-[#ba1a1a] hover:bg-[#ffdad6]' : 'text-[#004323] hover:bg-[#eff4ff]'}`}
                         title={vendor.active ? 'Deactivate' : 'Activate'}
                       >
-                        {vendor.active ? <Archive className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+                        <span className="material-symbols-outlined text-[18px]">{vendor.active ? 'archive' : 'unarchive'}</span>
                       </button>
                     </div>
                   </>

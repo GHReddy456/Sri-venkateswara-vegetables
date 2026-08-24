@@ -4,17 +4,7 @@ import type { Vendor, PurchaseRecordInput } from '../types';
 import { calculateLineTotal, calculateDailyTotal } from '../lib/calculations';
 import { formatCurrency } from '../lib/format';
 import { useAuth } from '../contexts/AuthContext';
-import {
-  Plus,
-  Trash2,
-  Loader2,
-  CheckCircle2,
-  CalendarDays,
-  Building2,
-  Package,
-  AlertCircle,
-  Save,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function AddRecords() {
@@ -46,9 +36,12 @@ export default function AddRecords() {
   const handleItemChange = (index: number, field: keyof PurchaseRecordInput, value: string) => {
     const updated = [...items];
     if (field === 'item') {
-      updated[index][field] = value;
+      updated[index].item = value;
     } else {
-      (updated[index] as Record<string, number | string>)[field] = value === '' ? 0 : Number(value);
+      const numVal = value === '' ? 0 : Number(value);
+      if (field === 'bags_count') updated[index].bags_count = numVal;
+      if (field === 'kgs') updated[index].kgs = numVal;
+      if (field === 'unit_price') updated[index].unit_price = numVal;
     }
     setItems(updated);
   };
@@ -87,43 +80,45 @@ export default function AddRecords() {
   const selectedVendor = vendors.find(v => v.id === selectedVendorId);
 
   return (
-    <div className="space-y-6 px-1 max-w-5xl mx-auto">
+    <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Add Purchase Records</h1>
-        <p className="mt-1 text-sm text-gray-500">Record daily vegetable purchases from vendors.</p>
+        <h1 className="font-['Outfit'] text-4xl font-bold text-[#0b1c30] tracking-tight">Add Purchase Records</h1>
+        <p className="mt-1 text-sm text-[#404941]">Record daily vegetable purchases from vendors.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Date & Vendor selector */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-              <CalendarDays className="h-4 w-4 text-primary" /> Purchase Date
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
+            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
+              <span className="material-symbols-outlined text-[#004323] text-[20px]">calendar_today</span>
+              Purchase Date
             </label>
             <input
               type="date"
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm shadow-sm"
+              className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
             />
           </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-              <Building2 className="h-4 w-4 text-primary" /> Vendor
+          <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
+            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
+              <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span>
+              Vendor
             </label>
             {loadingVendors ? (
-              <div className="flex items-center gap-2 py-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading vendors...
+              <div className="flex items-center gap-2 py-3 text-sm text-[#404941]">
+                <Loader2 className="h-4 w-4 animate-spin text-[#004323]" /> Loading vendors...
               </div>
             ) : (
               <select
                 required
                 value={selectedVendorId}
                 onChange={(e) => setSelectedVendorId(e.target.value)}
-                className="block w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm shadow-sm"
+                className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
               >
                 <option value="">Select a vendor...</option>
                 {vendors.map((v) => (
@@ -134,34 +129,36 @@ export default function AddRecords() {
           </div>
         </div>
 
-        {/* Items table */}
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-          <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-              <Package className="h-4 w-4 text-primary" />
+        {/* Items Table */}
+        <div className="bg-white border border-[#bfc9bf] rounded-2xl metric-shadow overflow-hidden">
+          <div className="border-b border-[#bfc9bf]/40 px-6 py-4 flex items-center justify-between">
+            <h3 className="font-['Outfit'] text-lg font-semibold text-[#0b1c30] flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#004323]">inventory_2</span>
               Items
               {selectedVendor && (
-                <span className="badge bg-green-100 text-green-700 ml-2">{selectedVendor.name}</span>
+                <span className="bg-[#eff4ff] text-[#004323] text-xs font-semibold px-3 py-1 rounded-full ml-2">
+                  {selectedVendor.name}
+                </span>
               )}
             </h3>
-            <span className="text-sm text-gray-400">{items.length} row{items.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs font-semibold text-[#404941]">{items.length} row{items.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Item Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-28">Bags</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-32">Kgs</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 w-36">₹ / kg</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 w-32">Total</th>
-                  <th className="w-10"></th>
+                <tr className="border-b border-[#bfc9bf]/30 bg-[#eff4ff]">
+                  <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941]">Item Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-28">Bags</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-32">Kgs</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-36">₹ / kg</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#404941] w-36">Total</th>
+                  <th className="w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#bfc9bf]/20">
                 {items.map((item, index) => (
-                  <tr key={index} className="table-row-hover">
+                  <tr key={index} className="hover:bg-[#eff4ff]/50 transition-colors">
                     <td className="px-6 py-3">
                       <input
                         type="text"
@@ -169,7 +166,7 @@ export default function AddRecords() {
                         placeholder="e.g. Tomato"
                         value={item.item}
                         onChange={(e) => handleItemChange(index, 'item', e.target.value)}
-                        className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -179,7 +176,7 @@ export default function AddRecords() {
                         min="1"
                         value={item.bags_count || ''}
                         onChange={(e) => handleItemChange(index, 'bags_count', e.target.value)}
-                        className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -190,7 +187,7 @@ export default function AddRecords() {
                         step="any"
                         value={item.kgs || ''}
                         onChange={(e) => handleItemChange(index, 'kgs', e.target.value)}
-                        className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -201,22 +198,22 @@ export default function AddRecords() {
                         step="any"
                         value={item.unit_price || ''}
                         onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
-                        className="block w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
                       />
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-900 text-sm">
+                    <td className="px-4 py-3 text-right font-['Outfit'] font-semibold text-[#0b1c30] text-base">
                       {calculateLineTotal(item.kgs, item.unit_price) > 0
                         ? formatCurrency(calculateLineTotal(item.kgs, item.unit_price))
-                        : <span className="text-gray-300">—</span>}
+                        : <span className="text-[#bfc9bf]">—</span>}
                     </td>
                     <td className="pr-4 py-3 text-center">
                       {items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#ba1a1a] hover:bg-[#ffdad6] transition-colors"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                       )}
                     </td>
@@ -224,11 +221,11 @@ export default function AddRecords() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-gray-200 bg-gray-50">
-                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-gray-700">
+                <tr className="border-t-2 border-[#bfc9bf] bg-[#eff4ff]">
+                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-[#0b1c30]">
                     Daily Cumulative Total
                   </td>
-                  <td className="px-4 py-4 text-right text-lg font-bold text-primary">
+                  <td className="px-4 py-4 text-right font-['Outfit'] text-2xl font-bold text-[#004323]">
                     {formatCurrency(dailyTotal)}
                   </td>
                   <td></td>
@@ -237,27 +234,28 @@ export default function AddRecords() {
             </table>
           </div>
 
-          <div className="border-t border-gray-100 px-6 py-4">
+          <div className="border-t border-[#bfc9bf]/30 px-6 py-4 bg-white rounded-b-2xl">
             <button
               type="button"
               onClick={handleAddItem}
-              className="flex items-center gap-1.5 rounded-lg border border-dashed border-green-300 bg-green-50 px-4 py-2 text-sm font-medium text-primary hover:bg-green-100"
+              className="flex items-center gap-2 rounded-full border-2 border-dashed border-[#004323] bg-[#eff4ff] px-5 py-2.5 text-sm font-semibold text-[#004323] hover:bg-[#dce9ff] transition-all"
             >
-              <Plus className="h-4 w-4" /> Add Item Row
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              Add Item Row
             </button>
           </div>
         </div>
 
         {/* Alerts */}
         {error && (
-          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+          <div className="flex items-center gap-3 rounded-2xl border border-[#ffdad6] bg-[#ffdad6]/50 p-4 text-sm font-medium text-[#93000a]">
+            <span className="material-symbols-outlined text-[#ba1a1a]">error</span>
             {error}
           </div>
         )}
         {saveSuccess && (
-          <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-            <CheckCircle2 className="h-5 w-5 shrink-0" />
+          <div className="flex items-center gap-3 rounded-2xl border border-[#a9f3be] bg-[#eff4ff] p-4 text-sm font-semibold text-[#004323]">
+            <span className="material-symbols-outlined text-[#004323]">check_circle</span>
             Records saved successfully!
           </div>
         )}
@@ -267,12 +265,12 @@ export default function AddRecords() {
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-green-200 hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-full bg-[#004323] px-8 py-3.5 font-['Outfit'] text-base font-semibold text-white shadow-sm hover:bg-[#0d5c34] disabled:opacity-60 transition-all active:scale-95"
           >
             {isSaving ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+              <><Loader2 className="h-4 w-4 animate-spin text-white" /> Saving...</>
             ) : (
-              <><Save className="h-4 w-4" /> Save Records</>
+              <><span className="material-symbols-outlined text-[20px]">save</span> Save Records</>
             )}
           </button>
         </div>

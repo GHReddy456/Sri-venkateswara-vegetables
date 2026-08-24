@@ -9,14 +9,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
+  const { session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
 
   const from = location.state?.from?.pathname || '/dashboard';
 
-  if (user) {
+  if (session) {
     return <Navigate to={from} replace />;
   }
 
@@ -25,44 +25,54 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+      if (signInError) throw signInError;
       navigate(from, { replace: true });
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred during login.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#f8f9ff] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-['Plus_Jakarta_Sans']">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <img src="/logo.png" alt="Sri Venkateswara Vegetables" className="h-24 w-auto" />
+          <img src="/logo.png" alt="Sri Venkateswara Vegetables" className="h-28 w-auto" />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+        <h2 className="mt-4 text-center font-['Outfit'] text-3xl font-bold text-[#0b1c30]">
           Sri Venkateswara Vegetables
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Sign in to manage purchase records
+        <p className="mt-1 text-center text-sm text-[#404941]">
+          Admin Login
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+        <div className="bg-white border border-[#bfc9bf] rounded-2xl p-8 metric-shadow">
           <form className="space-y-6" onSubmit={handleLogin}>
+            {error && (
+              <div className="rounded-xl bg-[#ffdad6] p-4 text-sm font-medium text-[#93000a] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">error</span>
+                {error}
+              </div>
+            )}
+
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email address
+              <label htmlFor="email" className="block text-sm font-semibold text-[#0b1c30]">
+                Email Address
               </label>
-              <div className="mt-1">
+              <div className="mt-2">
                 <input
                   id="email"
                   name="email"
@@ -71,19 +81,17 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
+                  className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+                  placeholder="admin@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-semibold text-[#0b1c30]">
                 Password
               </label>
-              <div className="mt-1">
+              <div className="mt-2">
                 <input
                   id="password"
                   name="password"
@@ -92,27 +100,28 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 shadow-sm placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
+                  className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+                  placeholder="••••••••"
                 />
               </div>
             </div>
-
-            {error && (
-              <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
-                {error}
-              </div>
-            )}
 
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex w-full justify-center items-center gap-2 rounded-full bg-[#004323] px-6 py-3 font-['Outfit'] text-base font-semibold text-white shadow-sm hover:bg-[#0d5c34] disabled:opacity-60 transition-all active:scale-95"
               >
                 {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    Signing in...
+                  </>
                 ) : (
-                  'Sign in'
+                  <>
+                    <span className="material-symbols-outlined text-[20px]">login</span>
+                    Sign In
+                  </>
                 )}
               </button>
             </div>

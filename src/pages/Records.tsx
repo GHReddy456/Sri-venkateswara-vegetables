@@ -3,16 +3,7 @@ import { supabase } from '../lib/supabase';
 import type { Vendor, DailySummary } from '../types';
 import { formatCurrency, formatDate } from '../lib/format';
 import { Link } from 'react-router-dom';
-import {
-  Loader2,
-  Printer,
-  Search,
-  Building2,
-  CalendarDays,
-  ChevronRight,
-  TrendingUp,
-  FileBarChart2,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 
 export default function Records() {
@@ -58,35 +49,35 @@ export default function Records() {
   const thirtyDayTotal = summaries.reduce((s, r) => s + r.daily_total, 0);
 
   return (
-    <div className="space-y-6 px-1">
+    <div className="flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 print:hidden">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Purchase Records</h1>
-          <p className="mt-1 text-sm text-gray-500">View 30-day vendor summaries and detailed daily reports.</p>
+          <h1 className="font-['Outfit'] text-4xl font-bold text-[#0b1c30] tracking-tight">Purchase Records</h1>
+          <p className="mt-1 text-sm text-[#404941]">View 30-day vendor summaries and detailed daily reports.</p>
         </div>
         {summaries.length > 0 && (
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-full border border-[#bfc9bf] bg-white px-5 py-2.5 text-sm font-semibold text-[#0b1c30] shadow-sm hover:bg-[#eff4ff] transition-all"
           >
-            <Printer className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[20px]">print</span>
             Print Summary
           </button>
         )}
       </div>
 
-      {/* Vendor selector */}
-      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm print:hidden">
-        <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-          <Building2 className="h-4 w-4 text-primary" /> Select Vendor
+      {/* Vendor Selector */}
+      <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow print:hidden">
+        <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
+          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select Vendor
         </label>
         <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#404941] text-[20px]">search</span>
           <select
             value={selectedVendorId}
             onChange={(e) => setSelectedVendorId(e.target.value)}
-            className="block w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm shadow-sm"
+            className="block w-full rounded-xl border border-[#bfc9bf] pl-10 pr-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
           >
             <option value="">-- Choose a vendor --</option>
             {vendors.map((v) => (
@@ -101,33 +92,33 @@ export default function Records() {
       {/* Results */}
       {selectedVendorId && (
         <>
-          {/* Summary cards (when data loaded) */}
+          {/* Summary Stat Cards */}
           {!loading && summaries.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 print:hidden">
-              <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">30-Day Total</p>
-                <p className="mt-1 text-2xl font-bold text-primary">{formatCurrency(thirtyDayTotal)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:hidden">
+              <div className="bg-[#004323] text-white rounded-2xl p-6 metric-shadow">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white/80">30-Day Cumulative Total</p>
+                <p className="font-['Outfit'] text-3xl font-bold mt-2">{formatCurrency(thirtyDayTotal)}</p>
               </div>
-              <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Days with Records</p>
-                <p className="mt-1 text-2xl font-bold text-gray-900">{summaries.length}</p>
+              <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#404941]">Active Purchase Days</p>
+                <p className="font-['Outfit'] text-3xl font-bold mt-2 text-[#0b1c30]">{summaries.length}</p>
               </div>
             </div>
           )}
 
-          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm print:shadow-none print:border-none">
-            <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between print:hidden">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                <FileBarChart2 className="h-4 w-4 text-primary" />
+          <div className="bg-white border border-[#bfc9bf] rounded-2xl metric-shadow overflow-hidden print:shadow-none print:border-none">
+            <div className="border-b border-[#bfc9bf]/40 px-6 py-4 flex items-center justify-between print:hidden">
+              <h3 className="font-['Outfit'] text-lg font-semibold text-[#0b1c30] flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#004323]">receipt_long</span>
                 Last 30 Days — {selectedVendor?.name}
               </h3>
-              <span className="badge bg-green-100 text-green-700">
-                <CalendarDays className="h-3 w-3 mr-1" />
-                30 days
+              <span className="bg-[#eff4ff] text-[#004323] text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                30 Days History
               </span>
             </div>
 
-            {/* Print header */}
+            {/* Print Header */}
             <div className="hidden print:block mb-8 text-center border-b-2 border-gray-400 pb-6">
               <div className="flex justify-center mb-3">
                 <img src="/logo.png" alt="Sri Venkateswara Vegetables" className="h-24 w-auto" />
@@ -141,54 +132,54 @@ export default function Records() {
 
             {loading ? (
               <div className="flex justify-center p-16 print:hidden">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#004323]" />
               </div>
             ) : summaries.length === 0 ? (
               <div className="flex flex-col items-center gap-3 p-16 text-center print:hidden">
-                <CalendarDays className="h-12 w-12 text-gray-200" />
-                <p className="text-gray-500">No purchase records found for this vendor in the last 30 days.</p>
+                <span className="material-symbols-outlined text-[48px] text-[#bfc9bf]">calendar_today</span>
+                <p className="text-[#404941] text-sm">No purchase records found for this vendor in the last 30 days.</p>
               </div>
             ) : (
               <table className="min-w-full print:border print:border-gray-300">
-                <thead className="bg-gray-50 print:bg-gray-100">
+                <thead className="bg-[#eff4ff] print:bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 print:border-b print:border-gray-300 print:text-sm">
+                    <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] print:border-b print:border-gray-300 print:text-sm">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 print:border-b print:border-gray-300 print:text-sm">
+                    <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#404941] print:border-b print:border-gray-300 print:text-sm">
                       Daily Total
                     </th>
-                    <th className="w-8 print:hidden"></th>
+                    <th className="w-12 print:hidden"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[#bfc9bf]/20">
                   {summaries.map((s) => (
-                    <tr key={s.purchase_date} className="table-row-hover group print:border-b print:border-gray-200">
-                      <td className="px-6 py-4 text-sm print:py-2 print:text-base print:border-b print:border-gray-200">
+                    <tr key={s.purchase_date} className="hover:bg-[#eff4ff]/50 transition-colors group print:border-b print:border-gray-200">
+                      <td className="px-6 py-4 text-sm font-semibold print:py-2 print:text-base print:border-b print:border-gray-200">
                         <Link
                           to={`/records/${s.purchase_date}?vendor=${selectedVendorId}`}
-                          className="flex items-center gap-2 font-medium text-primary hover:underline print:text-black print:no-underline"
+                          className="flex items-center gap-2 text-[#004323] hover:underline print:text-black print:no-underline"
                         >
-                          <CalendarDays className="h-4 w-4 text-gray-400 print:hidden" />
+                          <span className="material-symbols-outlined text-[18px] text-[#404941] print:hidden">calendar_today</span>
                           {formatDate(s.purchase_date)}
                         </Link>
                       </td>
-                      <td className="px-6 py-4 text-right text-sm font-semibold text-gray-900 print:py-2 print:text-base print:border-b print:border-gray-200">
+                      <td className="px-6 py-4 text-right font-['Outfit'] font-semibold text-[#0b1c30] text-base print:py-2 print:text-base print:border-b print:border-gray-200">
                         {formatCurrency(s.daily_total)}
                       </td>
-                      <td className="pr-3 py-4 print:hidden">
-                        <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-primary" />
+                      <td className="pr-4 py-4 text-right print:hidden">
+                        <span className="material-symbols-outlined text-[#bfc9bf] group-hover:text-[#004323] group-hover:translate-x-1 transition-all">chevron_right</span>
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-50 print:border-t-2 print:border-black">
+                <tfoot className="bg-[#eff4ff] border-t-2 border-[#bfc9bf] print:border-t-2 print:border-black">
                   <tr>
-                    <td className="px-6 py-4 text-sm font-bold text-gray-900 flex items-center gap-2 print:py-3 print:text-base">
-                      <TrendingUp className="h-4 w-4 text-primary print:hidden" />
-                      30-Day Total
+                    <td className="px-6 py-4 text-sm font-bold text-[#0b1c30] flex items-center gap-2 print:py-3 print:text-base">
+                      <span className="material-symbols-outlined text-[#004323] print:hidden">trending_up</span>
+                      30-Day Cumulative Total
                     </td>
-                    <td className="px-6 py-4 text-right text-lg font-bold text-primary print:text-black print:py-3">
+                    <td className="px-6 py-4 text-right font-['Outfit'] text-2xl font-bold text-[#004323] print:text-black print:py-3">
                       {formatCurrency(thirtyDayTotal)}
                     </td>
                     <td className="print:hidden"></td>

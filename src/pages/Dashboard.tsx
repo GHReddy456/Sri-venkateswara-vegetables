@@ -1,182 +1,163 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatCurrency, formatDate } from '../lib/format';
-import {
-  TrendingUp,
-  ClipboardList,
-  Building2,
-  Package,
-  Loader2,
-  ArrowRight,
-  ShoppingCart,
-  ChevronRight,
-  CalendarDays,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalAmount: 0,
-    entries: 0,
-    vendorsCount: 0,
-    itemsCount: 0,
-  });
+  const [stats, setStats] = useState({ totalAmount: 0, entries: 0, vendorsCount: 0, itemsCount: 0 });
 
   useEffect(() => {
-    const fetchDashboardStats = async () => {
+    const fetchStats = async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
       const { data, error } = await supabase
         .from('purchase_records')
         .select('vendor_id, item, total_price')
         .eq('purchase_date', today);
-
       if (!error && data) {
-        const totalAmount = data.reduce((sum, r) => sum + Number(r.total_price), 0);
-        const vendorsCount = new Set(data.map(r => r.vendor_id)).size;
-        const itemsCount = new Set(data.map(r => r.item.toLowerCase().trim())).size;
-        setStats({ totalAmount, entries: data.length, vendorsCount, itemsCount });
+        setStats({
+          totalAmount: data.reduce((s, r) => s + Number(r.total_price), 0),
+          entries: data.length,
+          vendorsCount: new Set(data.map(r => r.vendor_id)).size,
+          itemsCount: new Set(data.map(r => r.item.toLowerCase().trim())).size,
+        });
       }
       setLoading(false);
     };
-    fetchDashboardStats();
+    fetchStats();
   }, []);
 
-  const cards = [
-    {
-      name: "Today's Total",
-      value: formatCurrency(stats.totalAmount),
-      icon: TrendingUp,
-      primary: true,
-    },
-    {
-      name: "Today's Entries",
-      value: stats.entries.toString(),
-      icon: ClipboardList,
-      primary: false,
-    },
-    {
-      name: 'Active Vendors',
-      value: stats.vendorsCount.toString(),
-      icon: Building2,
-      primary: false,
-    },
-    {
-      name: 'Unique Items',
-      value: stats.itemsCount.toString(),
-      icon: Package,
-      primary: false,
-    },
-  ];
+  const today = formatDate(format(new Date(), 'yyyy-MM-dd'));
 
   return (
-    <div className="space-y-8 px-1">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-500">
-            <CalendarDays className="h-4 w-4" />
-            {formatDate(format(new Date(), 'yyyy-MM-dd'))}
-          </p>
+          <h1 className="font-['Outfit'] text-5xl font-bold text-[#0b1c30] tracking-tight">Dashboard</h1>
+          <div className="flex items-center gap-1.5 text-[#404941] mt-2">
+            <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+            <span className="text-sm font-medium">{today}</span>
+          </div>
         </div>
-        <Link
-          to="/records/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-200 hover:bg-primary-hover"
+        <button
+          onClick={() => navigate('/records/new')}
+          className="bg-[#004323] text-white font-['Outfit'] text-base font-semibold px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#0d5c34] transition-all shadow-sm active:scale-95 relative overflow-hidden group"
         >
-          <ShoppingCart className="h-4 w-4" />
-          Add Records
-        </Link>
+          <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-full" />
+          <span className="material-symbols-outlined relative z-10 text-[20px]">add_circle</span>
+          <span className="relative z-10">Add Records</span>
+        </button>
       </div>
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#004323]" />
         </div>
       ) : (
         <>
-          {/* Stat cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map((card) => (
-              <div
-                key={card.name}
-                className={`card-hover relative overflow-hidden rounded-2xl p-6 shadow-sm ${
-                  card.primary
-                    ? 'stat-gradient text-white'
-                    : 'bg-white border border-gray-100'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${card.primary ? 'text-green-100' : 'text-gray-500'}`}>
-                      {card.name}
-                    </p>
-                    <p className={`mt-2 text-3xl font-bold ${card.primary ? 'text-white' : 'text-gray-900'}`}>
-                      {card.value}
-                    </p>
-                  </div>
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                    card.primary ? 'bg-white/20' : 'bg-green-50'
-                  }`}>
-                    <card.icon className={`h-6 w-6 ${card.primary ? 'text-white' : 'text-primary'}`} />
-                  </div>
-                </div>
-                {card.primary && (
-                  <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-white/10" />
-                )}
+          {/* Metrics Bento Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Primary highlight */}
+            <div className="bg-[#004323] text-white rounded-2xl p-6 flex flex-col justify-between h-40 metric-shadow relative overflow-hidden group">
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
+              <div>
+                <h3 className="text-white/80 text-base font-medium">Today's Total</h3>
+                <div className="font-['Outfit'] text-4xl font-bold mt-2">{formatCurrency(stats.totalAmount)}</div>
               </div>
-            ))}
+              <div className="absolute bottom-6 right-6 bg-white/20 p-2 rounded-full backdrop-blur-sm">
+                <span className="material-symbols-outlined text-[24px]">trending_up</span>
+              </div>
+            </div>
+
+            {/* Metric: Entries */}
+            <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 flex flex-col justify-between h-40 metric-shadow">
+              <div className="flex justify-between items-start">
+                <h3 className="text-[#404941] text-base font-medium">Today's Entries</h3>
+                <div className="bg-[#eff4ff] text-[#004323] p-2 rounded-full">
+                  <span className="material-symbols-outlined text-[20px]">assignment</span>
+                </div>
+              </div>
+              <div className="font-['Outfit'] text-5xl font-bold text-[#0b1c30]">{stats.entries}</div>
+            </div>
+
+            {/* Metric: Vendors */}
+            <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 flex flex-col justify-between h-40 metric-shadow">
+              <div className="flex justify-between items-start">
+                <h3 className="text-[#404941] text-base font-medium">Active Vendors</h3>
+                <div className="bg-[#eff4ff] text-[#004323] p-2 rounded-full">
+                  <span className="material-symbols-outlined text-[20px]">storefront</span>
+                </div>
+              </div>
+              <div className="font-['Outfit'] text-5xl font-bold text-[#0b1c30]">{stats.vendorsCount}</div>
+            </div>
+
+            {/* Metric: Items */}
+            <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 flex flex-col justify-between h-40 metric-shadow">
+              <div className="flex justify-between items-start">
+                <h3 className="text-[#404941] text-base font-medium">Unique Items</h3>
+                <div className="bg-[#eff4ff] text-[#004323] p-2 rounded-full">
+                  <span className="material-symbols-outlined text-[20px]">inventory_2</span>
+                </div>
+              </div>
+              <div className="font-['Outfit'] text-5xl font-bold text-[#0b1c30]">{stats.itemsCount}</div>
+            </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-              <h3 className="mb-4 text-base font-semibold text-gray-900 flex items-center gap-2">
-                <ArrowRight className="h-4 w-4 text-primary" /> Quick Actions
-              </h3>
-              <div className="space-y-3">
+          {/* Lower grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quick Actions */}
+            <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
+              <div className="flex items-center gap-2 mb-6">
+                <span className="material-symbols-outlined text-[#004323] text-[24px]">bolt</span>
+                <h2 className="font-['Outfit'] text-2xl font-semibold text-[#0b1c30]">Quick Actions</h2>
+              </div>
+              <div className="flex flex-col gap-2">
                 {[
-                  { to: '/records/new', label: 'Add Purchase Records', icon: ShoppingCart },
-                  { to: '/records', label: 'View Past Records', icon: ClipboardList },
-                  { to: '/vendors', label: 'Manage Vendors', icon: Building2 },
-                ].map((action) => (
+                  { to: '/records/new', label: 'Add Purchase Records', icon: 'shopping_cart' },
+                  { to: '/records', label: 'View Past Records', icon: 'history' },
+                  { to: '/vendors', label: 'Manage Vendors', icon: 'manage_accounts' },
+                ].map(action => (
                   <Link
                     key={action.to}
                     to={action.to}
-                    className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-primary/30 hover:bg-green-50 hover:text-primary"
+                    className="group flex items-center justify-between p-4 bg-[#eff4ff] hover:bg-[#dce9ff] rounded-2xl transition-colors border border-transparent hover:border-[#bfc9bf]"
                   >
-                    <span className="flex items-center gap-2">
-                      <action.icon className="h-4 w-4" />
-                      {action.label}
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-4">
+                      <span className="material-symbols-outlined text-[#404941] group-hover:text-[#004323] transition-colors text-[22px]">{action.icon}</span>
+                      <span className="text-base font-semibold text-[#0b1c30]">{action.label}</span>
+                    </div>
+                    <span className="material-symbols-outlined text-[#404941] group-hover:translate-x-1 transition-transform">chevron_right</span>
                   </Link>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-              <h3 className="mb-4 text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Package className="h-4 w-4 text-primary" /> Today at a Glance
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                  <span className="text-gray-500">Total Purchases</span>
-                  <span className="font-semibold text-gray-900">{formatCurrency(stats.totalAmount)}</span>
-                </div>
-                <div className="flex justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                  <span className="text-gray-500">Records Entered</span>
-                  <span className="font-semibold text-gray-900">{stats.entries}</span>
-                </div>
-                <div className="flex justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                  <span className="text-gray-500">Vendors Active</span>
-                  <span className="font-semibold text-gray-900">{stats.vendorsCount}</span>
-                </div>
-                <div className="flex justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm">
-                  <span className="text-gray-500">Item Types</span>
-                  <span className="font-semibold text-gray-900">{stats.itemsCount}</span>
-                </div>
+            {/* Today at a Glance */}
+            <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow relative overflow-hidden">
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#004323 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+              <div className="flex items-center gap-2 mb-6 relative z-10">
+                <span className="material-symbols-outlined text-[#004323] text-[24px]">visibility</span>
+                <h2 className="font-['Outfit'] text-2xl font-semibold text-[#0b1c30]">Today at a Glance</h2>
+              </div>
+              <div className="flex flex-col gap-1 relative z-10">
+                {[
+                  { label: 'Total Purchases', value: formatCurrency(stats.totalAmount) },
+                  { label: 'Records Entered', value: stats.entries },
+                  { label: 'Vendors Active', value: stats.vendorsCount },
+                  { label: 'Item Types', value: stats.itemsCount },
+                ].map((row, i, arr) => (
+                  <div
+                    key={row.label}
+                    className={`flex justify-between items-center py-4 hover:bg-[#eff4ff] px-2 rounded-xl transition-colors ${i < arr.length - 1 ? 'border-b border-[#bfc9bf]/30' : ''}`}
+                  >
+                    <span className="text-[#404941] text-base">{row.label}</span>
+                    <span className="font-['Outfit'] text-xl font-semibold text-[#0b1c30]">{row.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
