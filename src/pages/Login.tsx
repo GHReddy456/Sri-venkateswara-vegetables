@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Loader2 } from 'lucide-react';
 
 export default function Login() {
@@ -25,6 +25,12 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
+    if (!isSupabaseConfigured) {
+      setError('⚠️ Vercel Environment Variables missing! Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel Project Settings, then click REDEPLOY.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -35,7 +41,11 @@ export default function Login() {
       navigate(from, { replace: true });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message);
+        if (err.message.includes('Failed to fetch')) {
+          setError('Failed to fetch: Unable to connect to Supabase. If you recently added Environment Variables in Vercel, please REDEPLOY your site in Vercel to rebuild with the new variables.');
+        } else {
+          setError(err.message);
+        }
       } else {
         setError('An unexpected error occurred during login.');
       }
@@ -61,10 +71,20 @@ export default function Login() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
         <div className="bg-white border border-slate-200 rounded-2xl p-8 metric-shadow">
           <form className="space-y-6" onSubmit={handleLogin}>
+            {!isSupabaseConfigured && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs font-semibold text-amber-800 flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] text-amber-600 shrink-0">warning</span>
+                <div>
+                  <strong>Environment Variables Needed:</strong>
+                  <p className="mt-1 font-normal">Add <code>VITE_SUPABASE_URL</code> & <code>VITE_SUPABASE_ANON_KEY</code> in Vercel Project Settings ➔ Environment Variables, then click <strong>Redeploy</strong> in Vercel.</p>
+                </div>
+              </div>
+            )}
+
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm font-medium text-red-700 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">error</span>
-                {error}
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm font-medium text-red-700 flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                <span>{error}</span>
               </div>
             )}
 
