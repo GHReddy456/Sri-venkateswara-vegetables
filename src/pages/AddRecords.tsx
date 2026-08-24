@@ -83,16 +83,16 @@ export default function AddRecords() {
     <div className="flex flex-col gap-8 max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="font-['Outfit'] text-4xl font-bold text-[#0b1c30] tracking-tight">Add Purchase Records</h1>
-        <p className="mt-1 text-sm text-[#404941]">Record daily vegetable purchases from vendors.</p>
+        <h1 className="font-['Outfit'] text-4xl font-bold text-slate-900 tracking-tight">Add Purchase Records</h1>
+        <p className="mt-1 text-sm text-slate-500">Record daily vegetable purchases from vendors.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Date & Vendor selector */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
-              <span className="material-symbols-outlined text-[#004323] text-[20px]">calendar_today</span>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
+            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <span className="material-symbols-outlined text-emerald-600 text-[20px]">calendar_today</span>
               Purchase Date
             </label>
             <input
@@ -100,25 +100,25 @@ export default function AddRecords() {
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+              className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-900"
             />
           </div>
 
-          <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
-              <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
+            <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <span className="material-symbols-outlined text-emerald-600 text-[20px]">storefront</span>
               Vendor
             </label>
             {loadingVendors ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-[#404941]">
-                <Loader2 className="h-4 w-4 animate-spin text-[#004323]" /> Loading vendors...
+              <div className="flex items-center gap-2 py-3 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" /> Loading vendors...
               </div>
             ) : (
               <select
                 required
                 value={selectedVendorId}
                 onChange={(e) => setSelectedVendorId(e.target.value)}
-                className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+                className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-900"
               >
                 <option value="">Select a vendor...</option>
                 {vendors.map((v) => (
@@ -130,35 +130,35 @@ export default function AddRecords() {
         </div>
 
         {/* Items Table */}
-        <div className="bg-white border border-[#bfc9bf] rounded-2xl metric-shadow overflow-hidden">
-          <div className="border-b border-[#bfc9bf]/40 px-6 py-4 flex items-center justify-between">
-            <h3 className="font-['Outfit'] text-lg font-semibold text-[#0b1c30] flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#004323]">inventory_2</span>
+        <div className="bg-white border border-slate-200 rounded-2xl metric-shadow overflow-hidden">
+          <div className="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+            <h3 className="font-['Outfit'] text-lg font-semibold text-slate-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-600">inventory_2</span>
               Items
               {selectedVendor && (
-                <span className="bg-[#eff4ff] text-[#004323] text-xs font-semibold px-3 py-1 rounded-full ml-2">
+                <span className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full border border-emerald-200 ml-2">
                   {selectedVendor.name}
                 </span>
               )}
             </h3>
-            <span className="text-xs font-semibold text-[#404941]">{items.length} row{items.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs font-semibold text-slate-500">{items.length} row{items.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr className="border-b border-[#bfc9bf]/30 bg-[#eff4ff]">
-                  <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941]">Item Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-28">Bags</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-32">Kgs</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#404941] w-36">₹ / kg</th>
-                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-[#404941] w-36">Total</th>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Item Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500 w-28">Bags</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500 w-32">Kgs</th>
+                  <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500 w-36">₹ / kg</th>
+                  <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500 w-36">Total</th>
                   <th className="w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#bfc9bf]/20">
+              <tbody className="divide-y divide-slate-100">
                 {items.map((item, index) => (
-                  <tr key={index} className="hover:bg-[#eff4ff]/50 transition-colors">
+                  <tr key={index} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-3">
                       <input
                         type="text"
@@ -166,7 +166,7 @@ export default function AddRecords() {
                         placeholder="e.g. Tomato"
                         value={item.item}
                         onChange={(e) => handleItemChange(index, 'item', e.target.value)}
-                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
+                        className="block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -176,7 +176,7 @@ export default function AddRecords() {
                         min="1"
                         value={item.bags_count || ''}
                         onChange={(e) => handleItemChange(index, 'bags_count', e.target.value)}
-                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
+                        className="block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -187,7 +187,7 @@ export default function AddRecords() {
                         step="any"
                         value={item.kgs || ''}
                         onChange={(e) => handleItemChange(index, 'kgs', e.target.value)}
-                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
+                        className="block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -198,20 +198,20 @@ export default function AddRecords() {
                         step="any"
                         value={item.unit_price || ''}
                         onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
-                        className="block w-full rounded-xl border border-[#bfc9bf] px-3 py-2 text-sm bg-white"
+                        className="block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white"
                       />
                     </td>
-                    <td className="px-4 py-3 text-right font-['Outfit'] font-semibold text-[#0b1c30] text-base">
+                    <td className="px-4 py-3 text-right font-['Outfit'] font-semibold text-slate-900 text-base">
                       {calculateLineTotal(item.kgs, item.unit_price) > 0
                         ? formatCurrency(calculateLineTotal(item.kgs, item.unit_price))
-                        : <span className="text-[#bfc9bf]">—</span>}
+                        : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="pr-4 py-3 text-center">
                       {items.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full text-[#ba1a1a] hover:bg-[#ffdad6] transition-colors"
+                          className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
@@ -221,11 +221,11 @@ export default function AddRecords() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-[#bfc9bf] bg-[#eff4ff]">
-                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-[#0b1c30]">
+                <tr className="border-t-2 border-slate-200 bg-slate-50">
+                  <td colSpan={4} className="px-6 py-4 text-right text-sm font-bold text-slate-700">
                     Daily Cumulative Total
                   </td>
-                  <td className="px-4 py-4 text-right font-['Outfit'] text-2xl font-bold text-[#004323]">
+                  <td className="px-4 py-4 text-right font-['Outfit'] text-2xl font-bold text-emerald-600">
                     {formatCurrency(dailyTotal)}
                   </td>
                   <td></td>
@@ -234,11 +234,11 @@ export default function AddRecords() {
             </table>
           </div>
 
-          <div className="border-t border-[#bfc9bf]/30 px-6 py-4 bg-white rounded-b-2xl">
+          <div className="border-t border-slate-200 px-6 py-4 bg-white rounded-b-2xl">
             <button
               type="button"
               onClick={handleAddItem}
-              className="flex items-center gap-2 rounded-full border-2 border-dashed border-[#004323] bg-[#eff4ff] px-5 py-2.5 text-sm font-semibold text-[#004323] hover:bg-[#dce9ff] transition-all"
+              className="flex items-center gap-2 rounded-xl border-2 border-dashed border-emerald-600 bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
               Add Item Row
@@ -248,14 +248,14 @@ export default function AddRecords() {
 
         {/* Alerts */}
         {error && (
-          <div className="flex items-center gap-3 rounded-2xl border border-[#ffdad6] bg-[#ffdad6]/50 p-4 text-sm font-medium text-[#93000a]">
-            <span className="material-symbols-outlined text-[#ba1a1a]">error</span>
+          <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+            <span className="material-symbols-outlined text-red-600">error</span>
             {error}
           </div>
         )}
         {saveSuccess && (
-          <div className="flex items-center gap-3 rounded-2xl border border-[#a9f3be] bg-[#eff4ff] p-4 text-sm font-semibold text-[#004323]">
-            <span className="material-symbols-outlined text-[#004323]">check_circle</span>
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">
+            <span className="material-symbols-outlined text-emerald-600">check_circle</span>
             Records saved successfully!
           </div>
         )}
@@ -265,7 +265,7 @@ export default function AddRecords() {
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-full bg-[#004323] px-8 py-3.5 font-['Outfit'] text-base font-semibold text-white shadow-sm hover:bg-[#0d5c34] disabled:opacity-60 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-8 py-3.5 font-['Outfit'] text-base font-semibold text-white shadow-md shadow-emerald-200 hover:bg-emerald-700 disabled:opacity-60 transition-all active:scale-95"
           >
             {isSaving ? (
               <><Loader2 className="h-4 w-4 animate-spin text-white" /> Saving...</>

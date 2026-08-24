@@ -45,31 +45,31 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-['Plus_Jakarta_Sans']">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-['Plus_Jakarta_Sans']">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <img src="/logo.png" alt="Sri Venkateswara Vegetables" className="h-28 w-auto" />
         </div>
-        <h2 className="mt-4 text-center font-['Outfit'] text-3xl font-bold text-[#0b1c30]">
+        <h2 className="mt-4 text-center font-['Outfit'] text-3xl font-bold text-slate-900">
           Sri Venkateswara Vegetables
         </h2>
-        <p className="mt-1 text-center text-sm text-[#404941]">
+        <p className="mt-1 text-center text-sm text-slate-500">
           Admin Login
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white border border-[#bfc9bf] rounded-2xl p-8 metric-shadow">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 metric-shadow">
           <form className="space-y-6" onSubmit={handleLogin}>
             {error && (
-              <div className="rounded-xl bg-[#ffdad6] p-4 text-sm font-medium text-[#93000a] flex items-center gap-2">
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm font-medium text-red-700 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">error</span>
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-[#0b1c30]">
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
                 Email Address
               </label>
               <div className="mt-2">
@@ -81,14 +81,14 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+                  className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-900"
                   placeholder="admin@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-[#0b1c30]">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
                 Password
               </label>
               <div className="mt-2">
@@ -100,7 +100,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-xl border border-[#bfc9bf] px-4 py-3 text-sm bg-[#f8f9ff] text-[#0b1c30]"
+                  className="block w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -110,7 +110,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center items-center gap-2 rounded-full bg-[#004323] px-6 py-3 font-['Outfit'] text-base font-semibold text-white shadow-sm hover:bg-[#0d5c34] disabled:opacity-60 transition-all active:scale-95"
+                className="flex w-full justify-center items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3.5 font-['Outfit'] text-base font-semibold text-white shadow-md shadow-emerald-200 hover:bg-emerald-700 disabled:opacity-60 transition-all active:scale-95"
               >
                 {loading ? (
                   <>
