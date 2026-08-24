@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Vendor, DailySummary } from '../types';
 import { formatCurrency, formatDate } from '../lib/format';
@@ -9,13 +9,27 @@ import { subDays, format } from 'date-fns';
 export default function Records() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [selectedVendorId, setSelectedVendorId] = useState('');
+  const [vendorSearchText, setVendorSearchText] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase.from('vendors').select('*').order('name').then(({ data, error }) => {
       if (!error && data) setVendors(data);
     });
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -48,6 +62,22 @@ export default function Records() {
   const selectedVendor = vendors.find(v => v.id === selectedVendorId);
   const thirtyDayTotal = summaries.reduce((s, r) => s + r.daily_total, 0);
 
+  const filteredVendors = vendors.filter(v =>
+    v.name.toLowerCase().includes(vendorSearchText.toLowerCase())
+  );
+
+  const handleSelectVendor = (v: Vendor) => {
+    setSelectedVendorId(v.id);
+    setVendorSearchText(v.name);
+    setIsDropdownOpen(false);
+  };
+
+  const handleClearSelection = () => {
+    setSelectedVendorId('');
+    setVendorSearchText('');
+    setIsDropdownOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -59,7 +89,7 @@ export default function Records() {
         {summaries.length > 0 && (
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 rounded-full border border-[#bfc9bf] bg-white px-5 py-2.5 text-sm font-semibold text-[#0b1c30] shadow-sm hover:bg-[#eff4ff] transition-all"
+            className="flex items-center gap-2 rounded-lg border border-[#bfc9bf] bg-white px-5 py-2.5 text-sm font-semibold text-[#0b1c30] shadow-sm hover:bg-[#eff4ff] transition-all"
           >
             <span className="material-symbols-outlined text-[20px]">print</span>
             Print Summary
@@ -67,26 +97,62 @@ export default function Records() {
         )}
       </div>
 
-      {/* Vendor Search Bar */}
-      <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow print:hidden">
+      {/* Square Vendor Search Bar */}
+      <div className="bg-white border border-[#bfc9bf] rounded-xl p-6 metric-shadow print:hidden">
         <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
-          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select / Search Vendor
+          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select Vendor
         </label>
-        <div className="relative w-full max-w-xl">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404941] text-[22px]">search</span>
-          <select
-            value={selectedVendorId}
-            onChange={(e) => setSelectedVendorId(e.target.value)}
-            className="w-full appearance-none rounded-xl border border-[#bfc9bf] bg-[#f8f9ff] py-3.5 pl-12 pr-10 text-base font-medium text-[#0b1c30] shadow-sm hover:border-[#004323] focus:border-[#004323] focus:bg-white transition-all cursor-pointer"
-          >
-            <option value="">Search or select a vendor from list...</option>
-            {vendors.map((v) => (
-              <option key={v.id} value={v.id} className="py-2 text-base">
-                {v.name}{!v.active ? ' (Inactive)' : ''}
-              </option>
-            ))}
-          </select>
-          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#404941] pointer-events-none text-[22px]">expand_more</span>
+        
+        <div className="relative w-full max-w-md" ref={dropdownRef}>
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#404941] text-[20px]">search</span>
+            <input
+              type="text"
+              value={vendorSearchText}
+              onFocus={() => setIsDropdownOpen(true)}
+              onChange={(e) => {
+                setVendorSearchText(e.target.value);
+                setIsDropdownOpen(true);
+                if (selectedVendorId) setSelectedVendorId('');
+              }}
+              placeholder="Select Vendor"
+              className="w-full rounded-lg border border-[#bfc9bf] bg-[#f8f9ff] py-3 pl-11 pr-10 text-base font-medium text-[#0b1c30] shadow-sm focus:border-[#004323] focus:bg-white focus:ring-0 transition-all"
+            />
+            {vendorSearchText && (
+              <button
+                type="button"
+                onClick={handleClearSelection}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#404941] hover:text-[#0b1c30]"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            )}
+          </div>
+
+          {/* Search Dropdown Results */}
+          {isDropdownOpen && (
+            <div className="absolute z-20 mt-1.5 w-full max-h-60 overflow-y-auto rounded-lg border border-[#bfc9bf] bg-white shadow-lg">
+              {filteredVendors.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-[#404941]">No vendors found</div>
+              ) : (
+                filteredVendors.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => handleSelectVendor(v)}
+                    className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-[#bfc9bf]/20 last:border-0 hover:bg-[#eff4ff] flex items-center justify-between ${
+                      selectedVendorId === v.id ? 'bg-[#eff4ff] text-[#004323] font-bold' : 'text-[#0b1c30]'
+                    }`}
+                  >
+                    <span>{v.name} {!v.active && <span className="text-xs text-gray-400 font-normal">(Inactive)</span>}</span>
+                    {selectedVendorId === v.id && (
+                      <span className="material-symbols-outlined text-[18px] text-[#004323]">check</span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -96,18 +162,18 @@ export default function Records() {
           {/* Summary Stat Cards */}
           {!loading && summaries.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:hidden">
-              <div className="bg-[#004323] text-white rounded-2xl p-6 metric-shadow">
+              <div className="bg-[#004323] text-white rounded-xl p-6 metric-shadow">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/80">30-Day Cumulative Total</p>
                 <p className="font-['Outfit'] text-3xl font-bold mt-2">{formatCurrency(thirtyDayTotal)}</p>
               </div>
-              <div className="bg-white border border-[#bfc9bf] rounded-2xl p-6 metric-shadow">
+              <div className="bg-white border border-[#bfc9bf] rounded-xl p-6 metric-shadow">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#404941]">Active Purchase Days</p>
                 <p className="font-['Outfit'] text-3xl font-bold mt-2 text-[#0b1c30]">{summaries.length}</p>
               </div>
             </div>
           )}
 
-          <div className="bg-white border border-[#bfc9bf] rounded-2xl metric-shadow overflow-hidden print:shadow-none print:border-none">
+          <div className="bg-white border border-[#bfc9bf] rounded-xl metric-shadow overflow-hidden print:shadow-none print:border-none">
             <div className="border-b border-[#bfc9bf]/40 px-6 py-4 flex items-center justify-between print:hidden">
               <h3 className="font-['Outfit'] text-lg font-semibold text-[#0b1c30] flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#004323]">receipt_long</span>
