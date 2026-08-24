@@ -97,15 +97,17 @@ export default function Records() {
         )}
       </div>
 
-      {/* Square Vendor Search Bar */}
+      {/* Full-Width Vendor Selection Section */}
       <div className="bg-white border border-[#bfc9bf] rounded-xl p-6 metric-shadow print:hidden">
-        <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0b1c30]">
-          <span className="material-symbols-outlined text-[#004323] text-[20px]">storefront</span> Select Vendor
+        <label className="mb-3 flex items-center gap-2 text-base font-semibold text-[#0b1c30]">
+          <span className="material-symbols-outlined text-[#004323] text-[22px]">storefront</span>
+          Select Vendor
         </label>
         
-        <div className="relative w-full max-w-md" ref={dropdownRef}>
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#404941] text-[20px]">search</span>
+        <div className="w-full max-w-2xl" ref={dropdownRef}>
+          {/* Search Input Box */}
+          <div className="relative w-full">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#404941] text-[22px] pointer-events-none">search</span>
             <input
               type="text"
               value={vendorSearchText}
@@ -115,38 +117,62 @@ export default function Records() {
                 setIsDropdownOpen(true);
                 if (selectedVendorId) setSelectedVendorId('');
               }}
-              placeholder="Select Vendor"
-              className="w-full rounded-lg border border-[#bfc9bf] bg-[#f8f9ff] py-3 pl-11 pr-10 text-base font-medium text-[#0b1c30] shadow-sm focus:border-[#004323] focus:bg-white focus:ring-0 transition-all"
+              placeholder="Type or click to search vendor name..."
+              style={{ width: '100%', minWidth: '100%' }}
+              className="w-full rounded-lg border-2 border-[#bfc9bf] bg-white py-3.5 pl-12 pr-10 text-base font-semibold text-[#0b1c30] shadow-sm focus:border-[#004323] focus:ring-0 transition-all placeholder:text-[#707a70]"
             />
             {vendorSearchText && (
               <button
                 type="button"
                 onClick={handleClearSelection}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#404941] hover:text-[#0b1c30]"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-[#404941] hover:text-[#0b1c30] hover:bg-[#eff4ff] rounded-full"
+                title="Clear selection"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
             )}
           </div>
 
-          {/* Search Dropdown Results */}
+          {/* Quick Vendor Chips for Easy One-Click Selection */}
+          {vendors.length > 0 && !selectedVendorId && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="text-xs font-semibold text-[#404941] self-center mr-1">Quick Select:</span>
+              {vendors.slice(0, 8).map(v => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => handleSelectVendor(v)}
+                  className="px-3 py-1.5 rounded-md bg-[#eff4ff] text-[#004323] text-xs font-semibold hover:bg-[#004323] hover:text-white transition-all border border-[#bfc9bf]/50"
+                >
+                  {v.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Dropdown Menu when typing or focused */}
           {isDropdownOpen && (
-            <div className="absolute z-20 mt-1.5 w-full max-h-60 overflow-y-auto rounded-lg border border-[#bfc9bf] bg-white shadow-lg">
+            <div className="absolute z-30 mt-2 w-full max-w-2xl max-h-64 overflow-y-auto rounded-lg border-2 border-[#004323] bg-white shadow-xl">
               {filteredVendors.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-[#404941]">No vendors found</div>
+                <div className="px-4 py-4 text-sm text-[#404941] font-medium">No vendor matches "{vendorSearchText}"</div>
               ) : (
                 filteredVendors.map((v) => (
                   <button
                     key={v.id}
                     type="button"
                     onClick={() => handleSelectVendor(v)}
-                    className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors border-b border-[#bfc9bf]/20 last:border-0 hover:bg-[#eff4ff] flex items-center justify-between ${
-                      selectedVendorId === v.id ? 'bg-[#eff4ff] text-[#004323] font-bold' : 'text-[#0b1c30]'
+                    className={`w-full text-left px-5 py-3.5 text-base font-semibold transition-colors border-b border-[#bfc9bf]/30 last:border-0 hover:bg-[#eff4ff] flex items-center justify-between ${
+                      selectedVendorId === v.id ? 'bg-[#eff4ff] text-[#004323]' : 'text-[#0b1c30]'
                     }`}
                   >
-                    <span>{v.name} {!v.active && <span className="text-xs text-gray-400 font-normal">(Inactive)</span>}</span>
+                    <span className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-[#004323] text-white flex items-center justify-center font-bold text-xs">
+                        {v.name.charAt(0).toUpperCase()}
+                      </span>
+                      {v.name} {!v.active && <span className="text-xs text-gray-400 font-normal">(Inactive)</span>}
+                    </span>
                     {selectedVendorId === v.id && (
-                      <span className="material-symbols-outlined text-[18px] text-[#004323]">check</span>
+                      <span className="material-symbols-outlined text-[20px] text-[#004323]">check_circle</span>
                     )}
                   </button>
                 ))
