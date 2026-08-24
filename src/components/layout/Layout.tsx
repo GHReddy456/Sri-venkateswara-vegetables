@@ -23,13 +23,13 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] font-['Plus_Jakarta_Sans'] antialiased flex flex-col print:bg-white">
-      {/* Top Navigation - Fresh Light Green Header */}
-      <header className="bg-[#16a34a] text-white shadow-md fixed top-0 w-full z-50 print:hidden">
+      {/* Top Navigation - Subtle Green with White Text and Icons */}
+      <header className="bg-[#15803d] text-white shadow-md fixed top-0 w-full z-50 print:hidden">
         <div className="flex justify-between items-center px-6 md:px-10 h-20 max-w-[1440px] mx-auto">
           {/* Brand */}
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="SVV" className="h-12 w-auto bg-white/20 backdrop-blur-sm rounded-xl p-1 shadow-sm" />
+              <img src="/logo.png" alt="SVV" className="h-12 w-auto brightness-0 invert" />
               <div className="flex flex-col leading-none">
                 <span className="font-['Outfit'] text-xl font-bold text-white leading-tight">Sri Venkateswara</span>
                 <span className="text-[11px] font-semibold text-green-100 tracking-[0.15em] uppercase mt-0.5">Vegetables</span>
@@ -45,8 +45,8 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'bg-white/25 text-white font-bold shadow-sm'
-                        : 'text-white/90 hover:text-white hover:bg-white/15'
+                        ? 'bg-white/20 text-white shadow-inner'
+                        : 'text-green-100 hover:text-white hover:bg-white/10'
                     }`
                   }
                 >
@@ -68,7 +68,7 @@ export default function Layout() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 bg-white/15 px-4 py-2 rounded-full border border-white/20 shadow-sm">
+            <div className="hidden md:flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
               <div className="w-8 h-8 rounded-full bg-white text-[#15803d] flex items-center justify-center font-bold text-sm font-['Outfit']">
                 {userInitial}
               </div>
@@ -78,7 +78,7 @@ export default function Layout() {
             </div>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-1.5 text-white hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/20 text-sm font-semibold border border-transparent hover:border-white/30"
+              className="flex items-center gap-1.5 text-white hover:bg-white/20 transition-colors px-4 py-2 rounded-full text-sm font-semibold"
             >
               <span className="material-symbols-outlined text-[20px] text-white">logout</span>
               <span className="hidden md:inline text-white">Logout</span>
@@ -86,7 +86,7 @@ export default function Layout() {
 
             {/* Mobile hamburger */}
             <button
-              className="md:hidden flex items-center justify-center rounded-full p-2 text-white hover:bg-white/20"
+              className="md:hidden flex items-center justify-center rounded-full p-2 text-white hover:bg-white/15"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="material-symbols-outlined text-white">{isMobileMenuOpen ? 'close' : 'menu'}</span>
@@ -96,17 +96,17 @@ export default function Layout() {
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20 bg-[#16a34a] px-4 pb-4">
+          <div className="md:hidden border-t border-white/20 bg-[#15803d] px-4 pb-4">
             {navItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.to}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 text-white ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 ${
                     isActive
-                      ? 'bg-white/25 text-white font-bold'
-                      : 'text-white/90 hover:bg-white/15'
+                      ? 'bg-white/20 text-white'
+                      : 'text-green-100 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
@@ -119,7 +119,7 @@ export default function Layout() {
               className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 text-white hover:bg-white/20"
             >
               <span className="material-symbols-outlined text-[20px] text-white">logout</span>
-              <span className="text-white">Logout</span>
+              Logout
             </button>
           </div>
         )}
