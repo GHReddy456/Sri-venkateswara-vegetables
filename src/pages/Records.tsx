@@ -320,16 +320,7 @@ export default function Records() {
         )}
       </div>
 
-      {/* Empty State when no filter selected */}
-      {!selectedVendorId && !selectedDate && (
-        <div className="bg-white border border-[#bfc9bf] rounded-xl p-16 text-center metric-shadow print:hidden flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-[54px] text-[#bfc9bf]">filter_alt</span>
-          <h3 className="font-['Outfit'] text-xl font-bold text-[#0b1c30]">No Filter Selected</h3>
-          <p className="text-sm text-[#404941] max-w-md">
-            Select a vendor, a date, or both from the filters above to view and print purchase records.
-          </p>
-        </div>
-      )}
+
 
       {/* ----------------- MODE A: Vendor Selected, Date Empty -> 30-Day Summary ----------------- */}
       {selectedVendorId && !selectedDate && (
