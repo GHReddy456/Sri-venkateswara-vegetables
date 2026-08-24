@@ -23,16 +23,16 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] font-['Plus_Jakarta_Sans'] antialiased flex flex-col print:bg-white">
-      {/* Top Navigation */}
-      <header className="bg-[#f8f9ff] border-b border-[#bfc9bf] shadow-sm fixed top-0 w-full z-50 print:hidden">
+      {/* Top Navigation - Fresh Light Green Header */}
+      <header className="bg-[#16a34a] text-white shadow-md fixed top-0 w-full z-50 print:hidden">
         <div className="flex justify-between items-center px-6 md:px-10 h-20 max-w-[1440px] mx-auto">
           {/* Brand */}
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="SVV" className="h-12 w-auto" />
+              <img src="/logo.png" alt="SVV" className="h-12 w-auto bg-white/20 backdrop-blur-sm rounded-xl p-1 shadow-sm" />
               <div className="flex flex-col leading-none">
-                <span className="font-['Outfit'] text-xl font-bold text-[#004323] leading-tight">Sri Venkateswara</span>
-                <span className="text-[11px] font-semibold text-[#004323] tracking-[0.15em] uppercase mt-0.5">Vegetables</span>
+                <span className="font-['Outfit'] text-xl font-bold text-white leading-tight">Sri Venkateswara</span>
+                <span className="text-[11px] font-semibold text-green-100 tracking-[0.15em] uppercase mt-0.5">Vegetables</span>
               </div>
             </div>
 
@@ -45,20 +45,20 @@ export default function Layout() {
                   className={({ isActive }) =>
                     `flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'text-[#004323] border-b-2 border-[#004323] rounded-none pb-1'
-                        : 'text-[#404941] hover:text-[#004323] hover:bg-[#eff4ff]'
+                        ? 'bg-white/25 text-white font-bold shadow-sm'
+                        : 'text-white/90 hover:text-white hover:bg-white/15'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       <span
-                        className="material-symbols-outlined text-[20px]"
+                        className="material-symbols-outlined text-[20px] text-white"
                         style={{ fontVariationSettings: isActive ? "'FILL' 1, 'wght' 600" : "'FILL' 0, 'wght' 400" }}
                       >
                         {item.icon}
                       </span>
-                      {item.name}
+                      <span className="text-white">{item.name}</span>
                     </>
                   )}
                 </NavLink>
@@ -68,58 +68,58 @@ export default function Layout() {
 
           {/* Right side */}
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 bg-[#eff4ff] px-4 py-2 rounded-full">
-              <div className="w-8 h-8 rounded-full bg-[#004323] text-white flex items-center justify-center font-bold text-sm font-['Outfit']">
+            <div className="hidden md:flex items-center gap-2 bg-white/15 px-4 py-2 rounded-full border border-white/20 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-white text-[#15803d] flex items-center justify-center font-bold text-sm font-['Outfit']">
                 {userInitial}
               </div>
-              <span className="text-[#404941] text-xs font-semibold max-w-[160px] truncate">
+              <span className="text-white text-xs font-semibold max-w-[160px] truncate">
                 {user?.email}
               </span>
             </div>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-1.5 text-[#404941] hover:text-[#ba1a1a] transition-colors px-4 py-2 rounded-full hover:bg-[#ffdad6] text-sm font-semibold"
+              className="flex items-center gap-1.5 text-white hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/20 text-sm font-semibold border border-transparent hover:border-white/30"
             >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-              <span className="hidden md:inline">Logout</span>
+              <span className="material-symbols-outlined text-[20px] text-white">logout</span>
+              <span className="hidden md:inline text-white">Logout</span>
             </button>
 
             {/* Mobile hamburger */}
             <button
-              className="md:hidden flex items-center justify-center rounded-full p-2 text-[#404941] hover:bg-[#eff4ff]"
+              className="md:hidden flex items-center justify-center rounded-full p-2 text-white hover:bg-white/20"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
+              <span className="material-symbols-outlined text-white">{isMobileMenuOpen ? 'close' : 'menu'}</span>
             </button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-[#bfc9bf] bg-[#f8f9ff] px-4 pb-4">
+          <div className="md:hidden border-t border-white/20 bg-[#16a34a] px-4 pb-4">
             {navItems.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.to}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 text-white ${
                     isActive
-                      ? 'bg-[#eff4ff] text-[#004323]'
-                      : 'text-[#404941] hover:bg-[#eff4ff] hover:text-[#004323]'
+                      ? 'bg-white/25 text-white font-bold'
+                      : 'text-white/90 hover:bg-white/15'
                   }`
                 }
               >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                {item.name}
+                <span className="material-symbols-outlined text-[20px] text-white">{item.icon}</span>
+                <span className="text-white">{item.name}</span>
               </NavLink>
             ))}
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 text-[#ba1a1a] hover:bg-[#ffdad6]"
+              className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold mt-2 text-white hover:bg-white/20"
             >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-              Logout
+              <span className="material-symbols-outlined text-[20px] text-white">logout</span>
+              <span className="text-white">Logout</span>
             </button>
           </div>
         )}
