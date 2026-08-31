@@ -27,7 +27,18 @@ export interface PurchaseRecordInput {
   unit_price: number;
 }
 
+export interface VendorDailyCoolie {
+  id?: string;
+  vendor_id: string;
+  purchase_date: string;
+  coolie_amount: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface DailySummary {
   purchase_date: string;
   daily_total: number;
+  items_total?: number;
+  coolie_amount?: number;
 }

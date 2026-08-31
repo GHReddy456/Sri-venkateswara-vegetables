@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Vendor, PurchaseRecord, DailySummary } from '../types';
 import { formatCurrency, formatDate } from '../lib/format';
-import { calculateLineTotal } from '../lib/calculations';
+import { calculateLineTotal, calculateItemsTotal } from '../lib/calculations';
 import { Loader2 } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 
@@ -16,6 +16,8 @@ export default function Records() {
   // Data states
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
   const [detailedRecords, setDetailedRecords] = useState<PurchaseRecord[]>([]);
+  const [coolieAmount, setCoolieAmount] = useState<number>(0);
+  const [isUpdatingCoolie, setIsUpdatingCoolie] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Edit record state
@@ -41,72 +43,134 @@ export default function Records() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchRecords = () => {
+  const fetchRecords = async () => {
     if (!selectedVendorId && !selectedDate) {
       setSummaries([]);
       setDetailedRecords([]);
+      setCoolieAmount(0);
       return;
     }
 
     setLoading(true);
 
     if (selectedVendorId && selectedDate) {
-      supabase
-        .from('purchase_records')
-        .select('*')
-        .eq('vendor_id', selectedVendorId)
-        .eq('purchase_date', selectedDate)
-        .order('created_at')
-        .then(({ data, error }) => {
-          if (!error && data) {
-            setDetailedRecords(data);
-            setSummaries([]);
-          }
-          setLoading(false);
-        });
+      // Both selected: Fetch items AND coolie for this vendor on this date
+      const [{ data: recordsData }, { data: coolieData }] = await Promise.all([
+        supabase
+          .from('purchase_records')
+          .select('*')
+          .eq('vendor_id', selectedVendorId)
+          .eq('purchase_date', selectedDate)
+          .order('created_at'),
+        supabase
+          .from('vendor_daily_coolie')
+          .select('coolie_amount')
+          .eq('vendor_id', selectedVendorId)
+          .eq('purchase_date', selectedDate)
+          .maybeSingle()
+      ]);
+
+      setDetailedRecords(recordsData || []);
+      setCoolieAmount(coolieData?.coolie_amount ? Number(coolieData.coolie_amount) : 0);
+      setSummaries([]);
+      setLoading(false);
+
     } else if (selectedVendorId && !selectedDate) {
+      // Vendor selected, date empty -> 30 Day Summary
       const thirtyDaysAgo = format(subDays(new Date(), 29), 'yyyy-MM-dd');
       const today = format(new Date(), 'yyyy-MM-dd');
-      supabase
-        .from('purchase_records')
-        .select('purchase_date, total_price')
-        .eq('vendor_id', selectedVendorId)
-        .gte('purchase_date', thirtyDaysAgo)
-        .lte('purchase_date', today)
-        .then(({ data, error }) => {
-          if (!error && data) {
-            const grouped = data.reduce((acc, r) => {
-              acc[r.purchase_date] = (acc[r.purchase_date] || 0) + Number(r.total_price);
-              return acc;
-            }, {} as Record<string, number>);
-            setSummaries(
-              Object.keys(grouped)
-                .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-                .map(date => ({ purchase_date: date, daily_total: grouped[date] }))
-            );
-            setDetailedRecords([]);
-          }
-          setLoading(false);
+
+      const [{ data: recordsData }, { data: coolieData }] = await Promise.all([
+        supabase
+          .from('purchase_records')
+          .select('purchase_date, total_price')
+          .eq('vendor_id', selectedVendorId)
+          .gte('purchase_date', thirtyDaysAgo)
+          .lte('purchase_date', today),
+        supabase
+          .from('vendor_daily_coolie')
+          .select('purchase_date, coolie_amount')
+          .eq('vendor_id', selectedVendorId)
+          .gte('purchase_date', thirtyDaysAgo)
+          .lte('purchase_date', today)
+      ]);
+
+      const itemsGrouped: Record<string, number> = {};
+      if (recordsData) {
+        recordsData.forEach(r => {
+          itemsGrouped[r.purchase_date] = (itemsGrouped[r.purchase_date] || 0) + Number(r.total_price);
         });
+      }
+
+      const coolieGrouped: Record<string, number> = {};
+      if (coolieData) {
+        coolieData.forEach(c => {
+          coolieGrouped[c.purchase_date] = Number(c.coolie_amount) || 0;
+        });
+      }
+
+      // Combine all dates with records or coolie
+      const allDates = Array.from(new Set([...Object.keys(itemsGrouped), ...Object.keys(coolieGrouped)]));
+
+      setSummaries(
+        allDates
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+          .map(date => {
+            const items_total = itemsGrouped[date] || 0;
+            const coolie_amount = coolieGrouped[date] || 0;
+            return {
+              purchase_date: date,
+              items_total,
+              coolie_amount,
+              daily_total: items_total + coolie_amount,
+            };
+          })
+      );
+      setDetailedRecords([]);
+      setCoolieAmount(0);
+      setLoading(false);
+
     } else if (!selectedVendorId && selectedDate) {
-      supabase
-        .from('purchase_records')
-        .select('*')
-        .eq('purchase_date', selectedDate)
-        .order('created_at')
-        .then(({ data, error }) => {
-          if (!error && data) {
-            setDetailedRecords(data);
-            setSummaries([]);
-          }
-          setLoading(false);
-        });
+      // Date selected, vendor empty -> All records for date
+      const [{ data: recordsData }, { data: coolieData }] = await Promise.all([
+        supabase
+          .from('purchase_records')
+          .select('*')
+          .eq('purchase_date', selectedDate)
+          .order('created_at'),
+        supabase
+          .from('vendor_daily_coolie')
+          .select('coolie_amount')
+          .eq('purchase_date', selectedDate)
+      ]);
+
+      setDetailedRecords(recordsData || []);
+      // Sum all vendors' coolie for this date if viewing all vendors
+      const totalCoolie = coolieData ? coolieData.reduce((sum, c) => sum + (Number(c.coolie_amount) || 0), 0) : 0;
+      setCoolieAmount(totalCoolie);
+      setSummaries([]);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchRecords();
   }, [selectedVendorId, selectedDate]);
+
+  const handleSelectVendor = (v: Vendor) => {
+    setSelectedVendorId(v.id);
+    setVendorSearchText(v.name);
+    setIsDropdownOpen(false);
+  };
+
+  const handleClearVendor = () => {
+    setSelectedVendorId('');
+    setVendorSearchText('');
+  };
+
+  const handleClearDate = () => {
+    setSelectedDate('');
+  };
 
   const handleSaveEdit = async () => {
     if (!editingId) return;
@@ -142,33 +206,40 @@ export default function Records() {
     }
   };
 
+  const handleUpdateCoolie = async (newVal: number) => {
+    if (!selectedVendorId || !selectedDate) return;
+    setIsUpdatingCoolie(true);
+    const rounded = Math.floor(Number(newVal)) || 0;
+    try {
+      await supabase
+        .from('vendor_daily_coolie')
+        .upsert(
+          {
+            vendor_id: selectedVendorId,
+            purchase_date: selectedDate,
+            coolie_amount: rounded,
+          },
+          { onConflict: 'vendor_id,purchase_date' }
+        );
+      setCoolieAmount(rounded);
+    } catch (e) {
+      console.error('Coolie update failed:', e);
+    }
+    setIsUpdatingCoolie(false);
+  };
+
   const selectedVendor = vendors.find(v => v.id === selectedVendorId);
   const vendorMap = new Map(vendors.map(v => [v.id, v.name]));
-
-  const thirtyDayTotal = summaries.reduce((s, r) => s + r.daily_total, 0);
-  const totalDetailedAmount = detailedRecords.reduce((s, r) => s + Number(r.total_price), 0);
-  const totalDetailedBags = detailedRecords.reduce((s, r) => s + Number(r.bags_count), 0);
-  const totalDetailedKgs = detailedRecords.reduce((s, r) => s + Number(r.kgs), 0);
 
   const filteredVendors = vendors.filter(v =>
     v.name.toLowerCase().includes(vendorSearchText.toLowerCase())
   );
 
-  const handleSelectVendor = (v: Vendor) => {
-    setSelectedVendorId(v.id);
-    setVendorSearchText(v.name);
-    setIsDropdownOpen(false);
-  };
-
-  const handleClearVendor = () => {
-    setSelectedVendorId('');
-    setVendorSearchText('');
-    setIsDropdownOpen(false);
-  };
-
-  const handleClearDate = () => {
-    setSelectedDate('');
-  };
+  const thirtyDayTotal = summaries.reduce((s, r) => s + r.daily_total, 0);
+  const itemsSubtotal = calculateItemsTotal(detailedRecords);
+  const totalDetailedAmount = itemsSubtotal + coolieAmount;
+  const totalDetailedBags = detailedRecords.reduce((s, r) => s + Number(r.bags_count), 0);
+  const totalDetailedKgs = detailedRecords.reduce((s, r) => s + Number(r.kgs), 0);
 
   const hasDataToPrint = (summaries.length > 0) || (detailedRecords.length > 0);
 
@@ -178,7 +249,7 @@ export default function Records() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 print:hidden">
         <div>
           <h1 className="font-['Outfit'] text-4xl font-bold text-slate-900 tracking-tight">Purchase Records</h1>
-          <p className="mt-1 text-sm text-slate-500">Filter by vendor, date, or combination to view, edit, delete, and print reports.</p>
+          <p className="mt-1 text-sm text-slate-500">Filter by vendor, date, or combination to view, edit, delete, and print reports with coolie charges.</p>
         </div>
         {hasDataToPrint && (
           <button
@@ -365,7 +436,7 @@ export default function Records() {
           {!loading && summaries.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 print:hidden">
               <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-6 metric-shadow">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">30-Day Cumulative Total</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">30-Day Cumulative Total (Items + Coolie)</p>
                 <p className="font-['Outfit'] text-3xl font-bold mt-2">{formatCurrency(thirtyDayTotal)}</p>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
@@ -395,7 +466,7 @@ export default function Records() {
               <h1 className="text-2xl font-bold uppercase tracking-wide">SRI VENKATESWARA VEGETABLES</h1>
               <p className="text-sm text-gray-600 mt-1">📞 9440217996 &nbsp;|&nbsp; 9032145195</p>
               <h2 className="text-xl mt-4 font-semibold">Vendor: {selectedVendor?.name}</h2>
-              <p className="mt-1 text-gray-600">Purchase Summary — Last 30 Days</p>
+              <p className="mt-1 text-gray-600">Purchase Summary — Last 30 Days (Including Coolie)</p>
               <p className="text-sm text-gray-500 mt-4 text-right">Generated on: {format(new Date(), 'dd-MM-yyyy')}</p>
             </div>
 
@@ -413,6 +484,8 @@ export default function Records() {
                 <thead className="bg-slate-50 print:bg-gray-100">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500 print:border-b print:border-gray-300 print:text-sm">Date</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500 print:border-b print:border-gray-300 print:text-sm">Items Total</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500 print:border-b print:border-gray-300 print:text-sm">Coolie</th>
                     <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-500 print:border-b print:border-gray-300 print:text-sm">Daily Total</th>
                     <th className="w-12 print:hidden"></th>
                   </tr>
@@ -431,7 +504,13 @@ export default function Records() {
                           {formatDate(s.purchase_date)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-['Outfit'] font-semibold text-slate-900 text-base print:py-2 print:text-base print:border-b print:border-gray-200">
+                      <td className="px-4 py-4 text-right text-sm text-slate-600 print:py-2 print:text-base print:border-b print:border-gray-200">
+                        {formatCurrency(s.items_total || 0)}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-medium text-emerald-700 print:py-2 print:text-base print:border-b print:border-gray-200">
+                        {s.coolie_amount ? `+ ${formatCurrency(s.coolie_amount)}` : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-right font-['Outfit'] font-bold text-slate-900 text-base print:py-2 print:text-base print:border-b print:border-gray-200">
                         {formatCurrency(s.daily_total)}
                       </td>
                       <td className="pr-4 py-4 text-right print:hidden">
@@ -442,9 +521,9 @@ export default function Records() {
                 </tbody>
                 <tfoot className="bg-slate-50 border-t-2 border-slate-200 print:border-t-2 print:border-black">
                   <tr>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2 print:py-3 print:text-base">
+                    <td colSpan={3} className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2 print:py-3 print:text-base">
                       <span className="material-symbols-outlined text-emerald-600 print:hidden">trending_up</span>
-                      30-Day Cumulative Total
+                      30-Day Cumulative Total (Items + Coolie)
                     </td>
                     <td className="px-6 py-4 text-right font-['Outfit'] text-2xl font-bold text-emerald-600 print:text-black print:py-3">
                       {formatCurrency(thirtyDayTotal)}
@@ -462,19 +541,23 @@ export default function Records() {
       {selectedDate && (
         <>
           {/* Summary Stat Cards for Detailed View */}
-          {!loading && detailedRecords.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 print:hidden">
+          {!loading && (detailedRecords.length > 0 || coolieAmount > 0) && (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 print:hidden">
               <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-6 metric-shadow">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">Total Amount</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">Cumulative Total</p>
                 <p className="font-['Outfit'] text-3xl font-bold mt-2">{formatCurrency(totalDetailedAmount)}</p>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Bags</p>
-                <p className="font-['Outfit'] text-3xl font-bold mt-2 text-slate-900">{totalDetailedBags}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Items Subtotal</p>
+                <p className="font-['Outfit'] text-3xl font-bold mt-2 text-slate-900">{formatCurrency(itemsSubtotal)}</p>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Kgs</p>
-                <p className="font-['Outfit'] text-3xl font-bold mt-2 text-slate-900">{totalDetailedKgs} kg</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Coolie Charge</p>
+                <p className="font-['Outfit'] text-3xl font-bold mt-2 text-emerald-700">{formatCurrency(coolieAmount)}</p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-6 metric-shadow">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Bags / Kgs</p>
+                <p className="font-['Outfit'] text-2xl font-bold mt-2 text-slate-900">{totalDetailedBags} bags · {totalDetailedKgs} kg</p>
               </div>
             </div>
           )}
@@ -508,7 +591,7 @@ export default function Records() {
               <div className="flex justify-center p-16 print:hidden">
                 <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
               </div>
-            ) : detailedRecords.length === 0 ? (
+            ) : (detailedRecords.length === 0 && coolieAmount === 0) ? (
               <div className="flex flex-col items-center gap-3 p-16 text-center print:hidden">
                 <span className="material-symbols-outlined text-[48px] text-slate-300">calendar_today</span>
                 <p className="text-slate-500 text-sm">
@@ -587,12 +670,62 @@ export default function Records() {
                     </tr>
                   ))}
                 </tbody>
+
+                {/* Footer with Items Subtotal, Coolie Amount, and Cumulative Total */}
                 <tfoot className="bg-slate-50 border-t-2 border-slate-200 print:border-t-2 print:border-black">
+                  {/* Items Subtotal */}
+                  <tr className="border-b border-slate-200/60">
+                    <td colSpan={!selectedVendorId ? 2 : 1} className="px-6 py-2.5 text-xs font-semibold text-slate-500">
+                      Items Subtotal
+                    </td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-700 text-xs">{totalDetailedBags} bags</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-700 text-xs">{totalDetailedKgs} kg</td>
+                    <td className="px-4 py-2.5"></td>
+                    <td className="px-4 py-2.5 text-right font-['Outfit'] text-sm font-semibold text-slate-700">
+                      {formatCurrency(itemsSubtotal)}
+                    </td>
+                    <td className="print:hidden"></td>
+                  </tr>
+
+                  {/* Coolie Row */}
+                  <tr className="border-b border-slate-200/60 bg-emerald-50/40">
+                    <td colSpan={!selectedVendorId ? 2 : 1} className="px-6 py-3 text-xs font-semibold text-emerald-800 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-emerald-600 text-[18px]">engineering</span>
+                      Coolie Charge (Vendor/Day)
+                    </td>
+                    <td colSpan={3} className="px-4 py-3 print:hidden">
+                      {selectedVendorId && selectedDate ? (
+                        <div className="flex items-center gap-2 max-w-xs">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={coolieAmount}
+                            onChange={(e) => setCoolieAmount(Math.floor(Number(e.target.value)) || 0)}
+                            onBlur={(e) => handleUpdateCoolie(Number(e.target.value))}
+                            className="w-28 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-900"
+                          />
+                          {isUpdatingCoolie && <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-600" />}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-500 italic">Total vendor coolie for this date</span>
+                      )}
+                    </td>
+                    <td colSpan={3} className="hidden print:table-cell px-4 py-3 text-xs text-gray-600">
+                      Coolie Amount
+                    </td>
+                    <td className="px-4 py-3 text-right font-['Outfit'] text-sm font-semibold text-emerald-700">
+                      + {formatCurrency(coolieAmount)}
+                    </td>
+                    <td className="print:hidden"></td>
+                  </tr>
+
+                  {/* Daily Cumulative Total */}
                   <tr>
                     <td colSpan={!selectedVendorId ? 2 : 1} className="px-6 py-4 text-sm font-bold text-slate-900 print:py-3">
-                      Total ({detailedRecords.length} Items)
+                      Daily Cumulative Total (Items + Coolie)
                     </td>
-                    <td className="px-4 py-4 font-bold text-slate-900 text-sm print:py-3">{totalDetailedBags}</td>
+                    <td className="px-4 py-4 font-bold text-slate-900 text-sm print:py-3">{totalDetailedBags} bags</td>
                     <td className="px-4 py-4 font-bold text-slate-900 text-sm print:py-3">{totalDetailedKgs} kg</td>
                     <td className="px-4 py-4 print:py-3"></td>
                     <td className="px-4 py-4 text-right font-['Outfit'] text-2xl font-bold text-emerald-600 print:text-black print:py-3">

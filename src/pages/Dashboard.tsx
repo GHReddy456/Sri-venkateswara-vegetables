@@ -13,13 +13,23 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       const today = format(new Date(), 'yyyy-MM-dd');
-      const { data, error } = await supabase
-        .from('purchase_records')
-        .select('vendor_id, item, total_price')
-        .eq('purchase_date', today);
+      const [{ data, error }, { data: coolieData }] = await Promise.all([
+        supabase
+          .from('purchase_records')
+          .select('vendor_id, item, total_price')
+          .eq('purchase_date', today),
+        supabase
+          .from('vendor_daily_coolie')
+          .select('coolie_amount')
+          .eq('purchase_date', today)
+      ]);
+
       if (!error && data) {
+        const itemsTotal = data.reduce((s, r) => s + Number(r.total_price), 0);
+        const coolieTotal = coolieData ? coolieData.reduce((s, c) => s + (Number(c.coolie_amount) || 0), 0) : 0;
+
         setStats({
-          totalAmount: data.reduce((s, r) => s + Number(r.total_price), 0),
+          totalAmount: itemsTotal + coolieTotal,
           entries: data.length,
           vendorsCount: new Set(data.map(r => r.vendor_id)).size,
           itemsCount: new Set(data.map(r => r.item.toLowerCase().trim())).size,
